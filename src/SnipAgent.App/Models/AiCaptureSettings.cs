@@ -13,7 +13,7 @@ public sealed class AiCaptureSettings
     /// <summary>Base URL of the OpenAI-compatible endpoint (e.g. https://api.openai.com/v1).</summary>
     public string BaseUrl { get; set; } = DefaultBaseUrl;
 
-    /// <summary>Model/deployment name to request, e.g. gpt-4o-mini.</summary>
+    /// <summary>Model/deployment name to request, e.g. gpt-5.6-sol.</summary>
     public string Model { get; set; } = DefaultModel;
 
     /// <summary>
@@ -27,7 +27,7 @@ public sealed class AiCaptureSettings
     public string? SelectedAiSkillsName { get; set; }
 
     public const string DefaultBaseUrl = "https://api.openai.com/v1";
-    public const string DefaultModel = "gpt-4o-mini";
+    public const string DefaultModel = "gpt-5.6-sol";
 
     /// <summary>The built-in AI Skills templates offered out of the box on a fresh install.</summary>
     public static List<AiSkillsTemplate> CreateDefaultAiSkills() => new()
@@ -35,27 +35,34 @@ public sealed class AiCaptureSettings
         new AiSkillsTemplate
         {
             Name = "Translate to Korean",
-            Prompt = "Translate the user's text into Korean as accurately and naturally as possible.",
+            Prompt = "Translate all readable text in the screenshot into natural Korean.\n" +
+                     "Preserve the original meaning, tone, structure, proper nouns, code, and URLs.\n" +
+                     "Return only the translation. Mark unreadable text as [illegible] instead of guessing.",
         },
         new AiSkillsTemplate
         {
-            Name = "Describe",
-            Prompt = "Analyze the captured image and describe as accurately and concisely as possible.",
+            Name = "Describe Screenshot",
+            Prompt = "Describe the screenshot accurately and concisely.\n" +
+                     "Identify the main content, relevant visible text, layout, and UI state.\n" +
+                     "Separate direct observations from inferences, and do not invent unreadable or hidden details.",
         },
         new AiSkillsTemplate
         {
-            Name = "Explain",
-            Prompt = "Extract the keywords or key trends from user's text. Explain new trends, background and provide insights\n" +
-                     "Use the web search tool to get latest information.\n" +
-                     "Add citations to the sources you used in your answer, and provide links to the relevant documentation.",
+            Name = "Research & Explain",
+            Prompt = "Analyze the content in the screenshot and identify its key topics, claims, and trends.\n" +
+                     "Explain the relevant background, significance, and practical implications.\n" +
+                     "Use web search to verify time-sensitive claims and add current context. Prefer authoritative primary sources.\n" +
+                     "Cite web-supported claims with inline links and finish with a brief Sources list.\n" +
+                     "Clearly label uncertainty or inference, and do not guess at unreadable content.",
             UseWebSearch = true,
         },
         new AiSkillsTemplate
         {
-            Name = "Azure Question",
-            Prompt = "Answer the user's question as accurately and concisely as possible.\n" +
-                     "Use the available Microsoft Learn documentation search tools whenever the question relates to Microsoft or Azure products, technologies, or documentation.\n" +
-                     "Add citations to the sources you used in your answer, and provide links to the relevant documentation.",
+            Name = "Azure Expert",
+            Prompt = "Answer the question or complete the task shown in the screenshot accurately and concisely.\n" +
+                     "Use the Microsoft Learn documentation tools to verify claims about Microsoft or Azure products and prefer official documentation.\n" +
+                     "Cite supporting sources with inline links and finish with a brief Sources list.\n" +
+                     "State any necessary assumptions, and do not guess at unreadable or missing details.",
             McpServers = new List<McpServerEntry> { new() { Enabled = true, Url = "https://learn.microsoft.com/api/mcp" } },
         },
     };

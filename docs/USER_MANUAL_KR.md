@@ -145,7 +145,7 @@ SnipAgent는 Windows 시스템 트레이에서 동작하는 가벼운 화면 캡
 - 다음 항목을 입력합니다.
   - **모드(Mode)**: `Off`, `Use AI capture`, `Use AI to answer` 중 선택
   - **Base URL**: OpenAI 호환 엔드포인트 주소 (예: `https://api.openai.com/v1`)
-  - **Model**: 사용할 모델 이름 (예: `gpt-4o-mini`)
+  - **Model**: 사용할 모델 이름 (기본값: `gpt-5.6-sol`)
   - **API Key**: 인증 키. 키는 `settings.json`이 아니라 **Windows 자격 증명 관리자
     (Credential Manager)** 에 안전하게 저장됩니다.
   - **Prompt**: `Use AI to answer` 모드에서 사용할 질문/지시문

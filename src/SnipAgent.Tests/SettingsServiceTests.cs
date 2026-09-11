@@ -136,6 +136,25 @@ public class SettingsServiceTests : IDisposable
         Assert.Equal(SavingOption.SaveToFile, new AppSettings().Saving);
     }
 
+    [Fact]
+    public void NewAiCaptureSettings_UseOptimizedModelAndSkillsDefaults()
+    {
+        var settings = new AiCaptureSettings();
+
+        Assert.Equal("gpt-5.6-sol", settings.Model);
+        Assert.Equal(
+            new[] { "Translate to Korean", "Describe Screenshot", "Research & Explain", "Azure Expert" },
+            settings.AiSkills.Select(skills => skills.Name));
+
+        var researchSkills = settings.AiSkills[2];
+        Assert.True(researchSkills.UseWebSearch);
+        Assert.Contains("authoritative primary sources", researchSkills.Prompt);
+
+        var azureSkills = settings.AiSkills[3];
+        Assert.Single(azureSkills.McpServers);
+        Assert.Equal("https://learn.microsoft.com/api/mcp", azureSkills.McpServers[0].Url);
+    }
+
     [Theory]
     [InlineData(SavingOption.SaveToFile)]
     [InlineData(SavingOption.SaveToClipboard)]
