@@ -50,49 +50,57 @@
                     </StackPanel>
                 </GroupBox>
 
-                <!-- Text Extract Options -->
-                <GroupBox Header="Text Extract Options" Margin="0,0,0,12">
-                    <StackPanel Margin="8">
-                        <CheckBox x:Name="OcrEnabledCheckBox" Content="Extract text from captured screenshots"
-                                  Checked="OnOcrEnabledChanged" Unchecked="OnOcrEnabledChanged" />
+                <!-- Advanced Options -->
+                <GroupBox Header="Advanced Options" Margin="0,0,0,12">
+                    <TabControl Margin="8">
+                        <TabItem Header="AI Capture">
+                            <StackPanel Margin="8">
+                                <ComboBox x:Name="ExtractMethodComboBox" Width="240" HorizontalAlignment="Left"
+                                          SelectionChanged="OnExtractMethodSelectionChanged" />
 
-                        <StackPanel x:Name="TextExtractOptionsPanel" Margin="0,10,0,0">
-                            <ComboBox x:Name="ExtractMethodComboBox" Width="220" HorizontalAlignment="Left" />
+                                <DockPanel x:Name="AiSkillsDockPanel" Margin="0,10,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="AI Skills (used by &quot;Use AI Skills&quot;):" Margin="0,0,0,2" />
+                                        <DockPanel>
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="8,0,0,0">
+                                                <Button x:Name="AiSkillsEditButton" Content="&#xE70F;" FontFamily="Segoe MDL2 Assets"
+                                                        Width="28" Margin="0,0,4,0" ToolTip="Edit selected AI skills" Click="OnAiSkillsEditClick" />
+                                                <Button x:Name="AiSkillsAddButton" Content="&#xE710;" FontFamily="Segoe MDL2 Assets"
+                                                        Width="28" Margin="0,0,4,0" ToolTip="Add new AI skills" Click="OnAiSkillsAddClick" />
+                                                <Button x:Name="AiSkillsDeleteButton" Content="&#xE711;" FontFamily="Segoe MDL2 Assets"
+                                                        Width="28" ToolTip="Delete selected AI skills" Click="OnAiSkillsDeleteClick" />
+                                            </StackPanel>
+                                            <ComboBox x:Name="AiSkillsComboBox" HorizontalAlignment="Stretch"
+                                                      SelectionChanged="OnAiSkillsSelectionChanged" />
+                                        </DockPanel>
 
-                            <TextBlock Text="Base URL:" Margin="0,10,0,2" />
-                            <TextBox x:Name="AiBaseUrlTextBox" />
+                                        <DockPanel Margin="0,12,0,2">
+                                            <Button DockPanel.Dock="Right" x:Name="AiSkillsRestoreDefaultsButton" Content="Restore defaults"
+                                                    Padding="6,2" ToolTip="Reset the AI skills list to the built-in defaults, discarding your additions and edits"
+                                                    Click="OnAiSkillsRestoreDefaultsClick" />
+                                            <TextBlock Text="Skills Prompt:" VerticalAlignment="Center" />
+                                        </DockPanel>
+                                        <TextBox x:Name="AiSkillsPromptTextBox" Height="90" AcceptsReturn="True" TextWrapping="Wrap"
+                                                 IsReadOnly="True" Background="#FFF0F0F0" VerticalScrollBarVisibility="Auto" />
+                                    </StackPanel>
+                                </DockPanel>
+                            </StackPanel>
+                        </TabItem>
 
-                            <TextBlock Text="Model:" Margin="0,10,0,2" />
-                            <TextBox x:Name="AiModelTextBox" />
+                        <TabItem Header="AI Settings">
+                            <StackPanel Margin="8">
+                                <TextBlock Text="Base URL:" Margin="0,0,0,2" />
+                                <TextBox x:Name="AiBaseUrlTextBox" />
 
-                            <TextBlock Text="API Key:" Margin="0,10,0,2" />
-                            <PasswordBox x:Name="AiApiKeyBox" />
-                            <TextBlock x:Name="AiApiKeyHintText" Margin="0,2,0,0" FontSize="11" Foreground="Gray" />
+                                <TextBlock Text="Model:" Margin="0,10,0,2" />
+                                <TextBox x:Name="AiModelTextBox" />
 
-                            <TextBlock Text="AI Skills (used by &quot;Use AI to answer&quot;):" Margin="0,10,0,2" />
-                            <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="8,0,0,0">
-                                    <Button x:Name="AiSkillsEditButton" Content="&#xE70F;" FontFamily="Segoe MDL2 Assets"
-                                            Width="28" Margin="0,0,4,0" ToolTip="Edit selected AI skills" Click="OnAiSkillsEditClick" />
-                                    <Button x:Name="AiSkillsAddButton" Content="&#xE710;" FontFamily="Segoe MDL2 Assets"
-                                            Width="28" Margin="0,0,4,0" ToolTip="Add new AI skills" Click="OnAiSkillsAddClick" />
-                                    <Button x:Name="AiSkillsDeleteButton" Content="&#xE711;" FontFamily="Segoe MDL2 Assets"
-                                            Width="28" ToolTip="Delete selected AI skills" Click="OnAiSkillsDeleteClick" />
-                                </StackPanel>
-                                <ComboBox x:Name="AiSkillsComboBox" HorizontalAlignment="Stretch"
-                                          SelectionChanged="OnAiSkillsSelectionChanged" />
-                            </DockPanel>
-
-                            <DockPanel Margin="0,12,0,2">
-                                <Button DockPanel.Dock="Right" x:Name="AiSkillsRestoreDefaultsButton" Content="Restore defaults"
-                                        Padding="6,2" ToolTip="Reset the AI skills list to the built-in defaults, discarding your additions and edits"
-                                        Click="OnAiSkillsRestoreDefaultsClick" />
-                                <TextBlock Text="Skills Prompt:" VerticalAlignment="Center" />
-                            </DockPanel>
-                            <TextBox x:Name="AiSkillsPromptTextBox" Height="90" AcceptsReturn="True" TextWrapping="Wrap"
-                                     IsReadOnly="True" Background="#FFF0F0F0" VerticalScrollBarVisibility="Auto" />
-                        </StackPanel>
-                    </StackPanel>
+                                <TextBlock Text="API Key:" Margin="0,10,0,2" />
+                                <PasswordBox x:Name="AiApiKeyBox" />
+                                <TextBlock x:Name="AiApiKeyHintText" Margin="0,2,0,0" FontSize="11" Foreground="Gray" />
+                            </StackPanel>
+                        </TabItem>
+                    </TabControl>
                 </GroupBox>
 
                 <!-- Notes -->

@@ -1,8 +1,8 @@
 namespace SnipAgent.App.Models;
 
 /// <summary>
-/// The text-extraction engine, selectable in the "Text Extract Options" settings
-/// group (only relevant when "Extract text from captured screenshots" is enabled).
+/// The text-extraction engine, selectable in the "AI Capture" tab under Advanced
+/// Options (only relevant when text extraction is enabled).
 /// </summary>
 public enum AiCaptureMode
 {
