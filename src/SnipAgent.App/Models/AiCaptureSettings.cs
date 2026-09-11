@@ -26,7 +26,7 @@ public sealed class AiCaptureSettings
     /// </summary>
     public List<AiSkillsTemplate> AiSkills { get; set; } = CreateDefaultAiSkills();
 
-    /// <summary>Name of the <see cref="AiSkillsTemplate"/> last selected for "Use AI to answer" mode.</summary>
+    /// <summary>Name of the <see cref="AiSkillsTemplate"/> last run from the answer overlay.</summary>
     public string? SelectedAiSkillsName { get; set; }
 
     public const string DefaultBaseUrl = "https://api.openai.com/v1";
@@ -128,4 +128,3 @@ public sealed class AiCaptureSettings
         }
     }
 }
-

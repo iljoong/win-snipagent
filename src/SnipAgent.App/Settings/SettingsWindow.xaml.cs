@@ -200,6 +200,15 @@ public partial class SettingsWindow : Window
         var dialog = new AiSkillsDialog(selected, otherNames) { Owner = this };
         if (dialog.ShowDialog() == true)
         {
+            if (string.Equals(
+                _workingCopy.AiCapture.SelectedAiSkillsName,
+                selected.Name,
+                StringComparison.OrdinalIgnoreCase))
+            {
+                // Preserve the remembered overlay choice when that skill is renamed.
+                _workingCopy.AiCapture.SelectedAiSkillsName = dialog.Result.Name;
+            }
+
             var index = _aiSkills.IndexOf(selected);
             _aiSkills[index] = dialog.Result;
             RefreshAiSkillsComboBox(dialog.Result);
@@ -356,7 +365,6 @@ public partial class SettingsWindow : Window
             ? AiCaptureSettings.DefaultModel
             : AiModelTextBox.Text.Trim();
         _workingCopy.AiCapture.AiSkills = _aiSkills;
-        _workingCopy.AiCapture.SelectedAiSkillsName = (AiSkillsComboBox.SelectedItem as AiSkillsTemplate)?.Name;
 
         // Only touch Credential Manager if the user actually typed a new key; an
         // empty box means "keep whatever is already saved" rather than "clear it".

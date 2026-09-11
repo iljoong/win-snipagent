@@ -68,6 +68,7 @@ public class SettingsServiceTests : IDisposable
         settings.LastCaptureMode = CaptureMode.FullScreen;
         settings.FilenamePattern = "Custom_{date}";
         settings.SaveFolder = _tempDir;
+        settings.AiCapture.SelectedAiSkillsName = "AI Tutor";
 
         service.Save(settings);
         var reloaded = service.Load();
@@ -75,6 +76,7 @@ public class SettingsServiceTests : IDisposable
         Assert.Equal(CaptureMode.FullScreen, reloaded.LastCaptureMode);
         Assert.Equal("Custom_{date}", reloaded.FilenamePattern);
         Assert.Equal(_tempDir, reloaded.SaveFolder);
+        Assert.Equal("AI Tutor", reloaded.AiCapture.SelectedAiSkillsName);
     }
 
     [Fact]

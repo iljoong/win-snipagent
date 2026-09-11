@@ -37,13 +37,14 @@ A Windows-only screenshot capture tool (.NET 10, WPF) that runs in the system tr
   OpenAI-compatible endpoint (Base URL, model, and API key — the key is stored securely
   in Windows Credential Manager, never in `settings.json`). Two modes:
   - **Use AI capture** — extracts the captured content as formatted **Markdown**.
-  - **Use AI to answer** — answers your configured **Prompt** using the capture as
-    context and shows the result in an always-on-top **answer overlay** (dismiss with
-    **Enter** or **Esc**) instead of saving a file. The overlay is centered over the
-    captured region/monitor and has an **Opacity slider** (bottom-left) to make it more
-    or less see-through; the chosen value is remembered in `settings.json` (it is not
-    exposed in the Settings window). Optional **MCP tool servers** can be supplied for
-    this mode.
+  - **Use AI to answer** — opens an always-on-top **answer overlay** where you choose
+    an AI skill, then press **Enter** to run it against the capture. The last skill used
+    is remembered for the next capture. After the answer appears, press **Enter** or
+    **Esc** to close; Esc also cancels a running request. The overlay is centered over
+    the captured region/monitor and has an **Opacity slider** (bottom-left) to make it
+    more or less see-through; the chosen value is remembered in `settings.json` (it is
+    not exposed in the Settings window). Skills can optionally use hosted web search
+    and **MCP tool servers**.
 - Silent on successful captures; shows a Windows notification only on failures
   (e.g. hotkey conflicts, save-folder problems, OCR errors).
 - Settings persisted as JSON at `%AppData%\SnipAgent\settings.json`.

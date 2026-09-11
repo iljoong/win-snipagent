@@ -63,14 +63,16 @@ public static class AiCaptureService
     }
 
     /// <summary>
-    /// Runs the "Use AI to answer" flow: uses the currently-selected <see cref="AiSkillsTemplate"/>'s
-    /// prompt as the task or question, with the screenshot as context, optionally invoking a
-    /// hosted web search tool and/or tools from enabled MCP servers. Returns the model's answer text.
+    /// Runs the "Use AI to answer" flow: uses the supplied <see cref="AiSkillsTemplate"/>'s
+    /// prompt as the task or question, with the screenshot as context, optionally invoking
+    /// a hosted web search tool and/or tools from enabled MCP servers. Returns the model's answer text.
     /// </summary>
-    public static async Task<string> AnswerAsync(Bitmap bitmap, AppSettings settings, CancellationToken cancellationToken = default)
+    public static async Task<string> AnswerAsync(
+        Bitmap bitmap,
+        AppSettings settings,
+        AiSkillsTemplate skills,
+        CancellationToken cancellationToken = default)
     {
-        var skills = GetSelectedAiSkills(settings.AiCapture);
-
         // The Chat Completions API only supports HostedWebSearchTool via the
         // `web_search_options` request field, which the real OpenAI API rejects as an
         // unknown parameter unless the model is one of the special "-search-preview"
@@ -79,19 +81,19 @@ public static class AiCaptureService
         // exposes web search as a normal tool that works with regular chat models, so
         // route there only when the selected skills actually need it; every other skills entry keeps
         // using the broadly-compatible Chat Completions API.
-        var client = skills?.UseWebSearch == true ? BuildResponsesChatClient(settings) : BuildChatClient(settings);
+        var client = skills.UseWebSearch ? BuildResponsesChatClient(settings) : BuildChatClient(settings);
         var mcpClients = new List<McpClient>();
 
         try
         {
             var tools = new List<AITool>();
 
-            if (skills?.UseWebSearch == true)
+            if (skills.UseWebSearch)
             {
                 tools.Add(new HostedWebSearchTool());
             }
 
-            foreach (var server in skills?.McpServers ?? [])
+            foreach (var server in skills.McpServers ?? [])
             {
                 if (!server.Enabled ||
                     !Uri.TryCreate(server.Url, UriKind.Absolute, out var endpoint) ||
@@ -114,6 +116,10 @@ public static class AiCaptureService
                     mcpClients.Add(mcpClient);
                     tools.AddRange(await mcpClient.ListToolsAsync(cancellationToken: cancellationToken).ConfigureAwait(false));
                 }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
                 catch
                 {
                     // A misbehaving/unreachable MCP server shouldn't block answering
@@ -121,7 +127,7 @@ public static class AiCaptureService
                 }
             }
 
-            var prompt = string.IsNullOrWhiteSpace(skills?.Prompt)
+            var prompt = string.IsNullOrWhiteSpace(skills.Prompt)
                 ? "Answer the question or complete the task shown in the image."
                 : skills.Prompt;
 
@@ -145,11 +151,11 @@ public static class AiCaptureService
     }
 
     /// <summary>
-    /// Resolves which configured <see cref="AiSkillsTemplate"/> to use: the one matching
+    /// Resolves which configured <see cref="AiSkillsTemplate"/> to preselect: the one matching
     /// <see cref="AiCaptureSettings.SelectedAiSkillsName"/> if present, otherwise the first
     /// configured template, or null if the list is empty.
     /// </summary>
-    private static AiSkillsTemplate? GetSelectedAiSkills(AiCaptureSettings settings)
+    internal static AiSkillsTemplate? ResolveSelectedAiSkills(AiCaptureSettings settings)
     {
         if (settings.AiSkills.Count == 0)
         {
