@@ -26,10 +26,10 @@ public partial class SettingsWindow : Window
     private HotkeyDefinition _pendingHotkey;
 
     /// <summary>
-    /// Working list of AI Task templates, kept in sync with <see cref="AiTaskComboBox"/>.
+    /// Working list of AI Skills templates, kept in sync with <see cref="AiSkillsComboBox"/>.
     /// Cloned from settings on load so Cancel discards any add/edit/delete.
     /// </summary>
-    private List<AiTaskTemplate> _aiTasks = new();
+    private List<AiSkillsTemplate> _aiSkills = new();
 
     public SettingsWindow(SettingsService settingsService, HotkeyManager hotkeyManager)
     {
@@ -132,94 +132,94 @@ public partial class SettingsWindow : Window
 
         // Deep-clone so Cancel doesn't leave partial add/edit/delete changes behind in
         // the loaded settings object.
-        _aiTasks = _workingCopy.AiCapture.AiTasks.Select(CloneAiTask).ToList();
-        var selectedTask = _aiTasks.FirstOrDefault(t =>
-            string.Equals(t.Name, _workingCopy.AiCapture.SelectedAiTaskName, StringComparison.OrdinalIgnoreCase));
-        RefreshAiTaskComboBox(selectedTask ?? _aiTasks.FirstOrDefault());
+        _aiSkills = _workingCopy.AiCapture.AiSkills.Select(CloneAiSkills).ToList();
+        var selectedSkills = _aiSkills.FirstOrDefault(t =>
+            string.Equals(t.Name, _workingCopy.AiCapture.SelectedAiSkillsName, StringComparison.OrdinalIgnoreCase));
+        RefreshAiSkillsComboBox(selectedSkills ?? _aiSkills.FirstOrDefault());
     }
 
-    private static AiTaskTemplate CloneAiTask(AiTaskTemplate task) => new()
+    private static AiSkillsTemplate CloneAiSkills(AiSkillsTemplate skills) => new()
     {
-        Name = task.Name,
-        Prompt = task.Prompt,
-        UseWebSearch = task.UseWebSearch,
-        McpServers = task.McpServers.Select(s => new McpServerEntry { Enabled = s.Enabled, Url = s.Url }).ToList(),
+        Name = skills.Name,
+        Prompt = skills.Prompt,
+        UseWebSearch = skills.UseWebSearch,
+        McpServers = skills.McpServers.Select(s => new McpServerEntry { Enabled = s.Enabled, Url = s.Url }).ToList(),
     };
 
-    /// <summary>Rebinds <see cref="AiTaskComboBox"/> to the current <see cref="_aiTasks"/> list and selects <paramref name="select"/> (or the first item).</summary>
-    private void RefreshAiTaskComboBox(AiTaskTemplate? select)
+    /// <summary>Rebinds <see cref="AiSkillsComboBox"/> to the current <see cref="_aiSkills"/> list and selects <paramref name="select"/> (or the first item).</summary>
+    private void RefreshAiSkillsComboBox(AiSkillsTemplate? select)
     {
-        AiTaskComboBox.ItemsSource = null;
-        AiTaskComboBox.ItemsSource = _aiTasks;
-        AiTaskComboBox.DisplayMemberPath = nameof(AiTaskTemplate.Name);
-        AiTaskComboBox.SelectedItem = select is not null && _aiTasks.Contains(select)
+        AiSkillsComboBox.ItemsSource = null;
+        AiSkillsComboBox.ItemsSource = _aiSkills;
+        AiSkillsComboBox.DisplayMemberPath = nameof(AiSkillsTemplate.Name);
+        AiSkillsComboBox.SelectedItem = select is not null && _aiSkills.Contains(select)
             ? select
-            : _aiTasks.FirstOrDefault();
+            : _aiSkills.FirstOrDefault();
 
-        UpdateAiTaskPromptText();
-        UpdateAiTaskButtonsEnabled();
+        UpdateAiSkillsPromptText();
+        UpdateAiSkillsButtonsEnabled();
     }
 
-    private void OnAiTaskSelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void OnAiSkillsSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        UpdateAiTaskPromptText();
-        UpdateAiTaskButtonsEnabled();
+        UpdateAiSkillsPromptText();
+        UpdateAiSkillsButtonsEnabled();
     }
 
-    private void UpdateAiTaskPromptText()
-        => AiTaskPromptTextBox.Text = (AiTaskComboBox.SelectedItem as AiTaskTemplate)?.Prompt ?? string.Empty;
+    private void UpdateAiSkillsPromptText()
+        => AiSkillsPromptTextBox.Text = (AiSkillsComboBox.SelectedItem as AiSkillsTemplate)?.Prompt ?? string.Empty;
 
     /// <summary>Edit/delete only make sense when the list has at least one selected template.</summary>
-    private void UpdateAiTaskButtonsEnabled()
+    private void UpdateAiSkillsButtonsEnabled()
     {
-        bool hasSelection = AiTaskComboBox.SelectedItem is AiTaskTemplate;
-        AiTaskEditButton.IsEnabled = hasSelection;
-        AiTaskDeleteButton.IsEnabled = hasSelection;
+        bool hasSelection = AiSkillsComboBox.SelectedItem is AiSkillsTemplate;
+        AiSkillsEditButton.IsEnabled = hasSelection;
+        AiSkillsDeleteButton.IsEnabled = hasSelection;
     }
 
-    private void OnAiTaskAddClick(object sender, RoutedEventArgs e)
+    private void OnAiSkillsAddClick(object sender, RoutedEventArgs e)
     {
-        var dialog = new AiTaskDialog(template: null, otherTaskNames: _aiTasks.Select(t => t.Name).ToList()) { Owner = this };
+        var dialog = new AiSkillsDialog(template: null, otherSkillsNames: _aiSkills.Select(t => t.Name).ToList()) { Owner = this };
         if (dialog.ShowDialog() == true)
         {
-            _aiTasks.Add(dialog.Result);
-            RefreshAiTaskComboBox(dialog.Result);
+            _aiSkills.Add(dialog.Result);
+            RefreshAiSkillsComboBox(dialog.Result);
         }
     }
 
-    private void OnAiTaskEditClick(object sender, RoutedEventArgs e)
+    private void OnAiSkillsEditClick(object sender, RoutedEventArgs e)
     {
-        if (AiTaskComboBox.SelectedItem is not AiTaskTemplate selected)
+        if (AiSkillsComboBox.SelectedItem is not AiSkillsTemplate selected)
         {
             return;
         }
 
-        var otherNames = _aiTasks.Where(t => !ReferenceEquals(t, selected)).Select(t => t.Name).ToList();
-        var dialog = new AiTaskDialog(selected, otherNames) { Owner = this };
+        var otherNames = _aiSkills.Where(t => !ReferenceEquals(t, selected)).Select(t => t.Name).ToList();
+        var dialog = new AiSkillsDialog(selected, otherNames) { Owner = this };
         if (dialog.ShowDialog() == true)
         {
-            var index = _aiTasks.IndexOf(selected);
-            _aiTasks[index] = dialog.Result;
-            RefreshAiTaskComboBox(dialog.Result);
+            var index = _aiSkills.IndexOf(selected);
+            _aiSkills[index] = dialog.Result;
+            RefreshAiSkillsComboBox(dialog.Result);
         }
     }
 
-    private void OnAiTaskDeleteClick(object sender, RoutedEventArgs e)
+    private void OnAiSkillsDeleteClick(object sender, RoutedEventArgs e)
     {
-        if (AiTaskComboBox.SelectedItem is not AiTaskTemplate selected)
+        if (AiSkillsComboBox.SelectedItem is not AiSkillsTemplate selected)
         {
             return;
         }
 
-        _aiTasks.Remove(selected);
-        RefreshAiTaskComboBox(_aiTasks.FirstOrDefault());
+        _aiSkills.Remove(selected);
+        RefreshAiSkillsComboBox(_aiSkills.FirstOrDefault());
     }
 
-    /// <summary>Adds back any of the built-in AI Task templates whose name isn't already present.</summary>
-    private void OnAiTaskRestoreDefaultsClick(object sender, RoutedEventArgs e)
+    /// <summary>Adds back any of the built-in AI Skills templates whose name isn't already present.</summary>
+    private void OnAiSkillsRestoreDefaultsClick(object sender, RoutedEventArgs e)
     {
-        var existingNames = new HashSet<string>(_aiTasks.Select(t => t.Name), StringComparer.OrdinalIgnoreCase);
-        var added = AiCaptureSettings.CreateDefaultAiTasks()
+        var existingNames = new HashSet<string>(_aiSkills.Select(t => t.Name), StringComparer.OrdinalIgnoreCase);
+        var added = AiCaptureSettings.CreateDefaultAiSkills()
             .Where(t => !existingNames.Contains(t.Name))
             .ToList();
 
@@ -228,8 +228,8 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        _aiTasks.AddRange(added);
-        RefreshAiTaskComboBox(added[0]);
+        _aiSkills.AddRange(added);
+        RefreshAiSkillsComboBox(added[0]);
     }
 
     private void OnBrowseFolderClick(object sender, RoutedEventArgs e)
@@ -337,8 +337,8 @@ public partial class SettingsWindow : Window
         _workingCopy.AiCapture.Model = string.IsNullOrWhiteSpace(AiModelTextBox.Text)
             ? AiCaptureSettings.DefaultModel
             : AiModelTextBox.Text.Trim();
-        _workingCopy.AiCapture.AiTasks = _aiTasks;
-        _workingCopy.AiCapture.SelectedAiTaskName = (AiTaskComboBox.SelectedItem as AiTaskTemplate)?.Name;
+        _workingCopy.AiCapture.AiSkills = _aiSkills;
+        _workingCopy.AiCapture.SelectedAiSkillsName = (AiSkillsComboBox.SelectedItem as AiSkillsTemplate)?.Name;
 
         // Only touch Credential Manager if the user actually typed a new key; an
         // empty box means "keep whatever is already saved" rather than "clear it".

@@ -43,13 +43,13 @@ public static class AiCaptureService
     }
 
     /// <summary>
-    /// Runs the "Use AI to answer" flow: uses the currently-selected <see cref="AiTaskTemplate"/>'s
+    /// Runs the "Use AI to answer" flow: uses the currently-selected <see cref="AiSkillsTemplate"/>'s
     /// prompt as the task or question, with the screenshot as context, optionally invoking a
     /// hosted web search tool and/or tools from enabled MCP servers. Returns the model's answer text.
     /// </summary>
     public static async Task<string> AnswerAsync(Bitmap bitmap, AppSettings settings, CancellationToken cancellationToken = default)
     {
-        var task = GetSelectedAiTask(settings.AiCapture);
+        var skills = GetSelectedAiSkills(settings.AiCapture);
 
         // The Chat Completions API only supports HostedWebSearchTool via the
         // `web_search_options` request field, which the real OpenAI API rejects as an
@@ -57,21 +57,21 @@ public static class AiCaptureService
         // variants — it 404s/400s for regular models (gpt-4o-mini, gpt-4o, etc.) and for
         // most other OpenAI-compatible endpoints entirely. The Responses API instead
         // exposes web search as a normal tool that works with regular chat models, so
-        // route there only when this task actually needs it; every other task keeps
+        // route there only when the selected skills actually need it; every other skills entry keeps
         // using the broadly-compatible Chat Completions API.
-        var client = task?.UseWebSearch == true ? BuildResponsesChatClient(settings) : BuildChatClient(settings);
+        var client = skills?.UseWebSearch == true ? BuildResponsesChatClient(settings) : BuildChatClient(settings);
         var mcpClients = new List<McpClient>();
 
         try
         {
             var tools = new List<AITool>();
 
-            if (task?.UseWebSearch == true)
+            if (skills?.UseWebSearch == true)
             {
                 tools.Add(new HostedWebSearchTool());
             }
 
-            foreach (var server in task?.McpServers ?? [])
+            foreach (var server in skills?.McpServers ?? [])
             {
                 if (!server.Enabled ||
                     !Uri.TryCreate(server.Url, UriKind.Absolute, out var endpoint) ||
@@ -101,9 +101,9 @@ public static class AiCaptureService
                 }
             }
 
-            var prompt = string.IsNullOrWhiteSpace(task?.Prompt)
+            var prompt = string.IsNullOrWhiteSpace(skills?.Prompt)
                 ? "Answer the question or complete the task shown in the image."
-                : task.Prompt;
+                : skills.Prompt;
 
             var messages = new List<ChatMessage>
             {
@@ -125,28 +125,28 @@ public static class AiCaptureService
     }
 
     /// <summary>
-    /// Resolves which configured <see cref="AiTaskTemplate"/> to use: the one matching
-    /// <see cref="AiCaptureSettings.SelectedAiTaskName"/> if present, otherwise the first
+    /// Resolves which configured <see cref="AiSkillsTemplate"/> to use: the one matching
+    /// <see cref="AiCaptureSettings.SelectedAiSkillsName"/> if present, otherwise the first
     /// configured template, or null if the list is empty.
     /// </summary>
-    private static AiTaskTemplate? GetSelectedAiTask(AiCaptureSettings settings)
+    private static AiSkillsTemplate? GetSelectedAiSkills(AiCaptureSettings settings)
     {
-        if (settings.AiTasks.Count == 0)
+        if (settings.AiSkills.Count == 0)
         {
             return null;
         }
 
-        if (!string.IsNullOrEmpty(settings.SelectedAiTaskName))
+        if (!string.IsNullOrEmpty(settings.SelectedAiSkillsName))
         {
-            var match = settings.AiTasks.FirstOrDefault(
-                t => string.Equals(t.Name, settings.SelectedAiTaskName, StringComparison.OrdinalIgnoreCase));
+            var match = settings.AiSkills.FirstOrDefault(
+                t => string.Equals(t.Name, settings.SelectedAiSkillsName, StringComparison.OrdinalIgnoreCase));
             if (match is not null)
             {
                 return match;
             }
         }
 
-        return settings.AiTasks[0];
+        return settings.AiSkills[0];
     }
 
     private static DataContent ToImageContent(Bitmap bitmap)
@@ -168,8 +168,8 @@ public static class AiCaptureService
 
     /// <summary>
     /// Builds a chat client backed by the OpenAI Responses API instead of Chat
-    /// Completions. Only used when the active <see cref="AiTaskTemplate"/> has
-    /// <see cref="AiTaskTemplate.UseWebSearch"/> set — the Responses API exposes
+    /// Completions. Only used when the active <see cref="AiSkillsTemplate"/> has
+    /// <see cref="AiSkillsTemplate.UseWebSearch"/> set — the Responses API exposes
     /// hosted web search as a normal, broadly-supported tool, whereas the Chat
     /// Completions API only supports it via a `web_search_options` request field
     /// that real OpenAI rejects for anything but its "-search-preview" models.

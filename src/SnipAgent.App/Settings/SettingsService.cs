@@ -75,7 +75,7 @@ public sealed class SettingsService
             {
                 settings.AiCapture.Model = AiCaptureSettings.DefaultModel;
             }
-            settings.AiCapture.AiTasks ??= new List<AiTaskTemplate>();
+            settings.AiCapture.AiSkills ??= new List<AiSkillsTemplate>();
 
             return settings;
         }

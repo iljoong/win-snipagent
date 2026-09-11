@@ -8,34 +8,34 @@ using TextBox = System.Windows.Controls.TextBox;
 namespace SnipAgent.App.Settings;
 
 /// <summary>
-/// Modal dialog for adding or editing one <see cref="AiTaskTemplate"/> used by "Use
-/// AI to answer" mode: task name, prompt, optional hosted web search tool, and
+/// Modal dialog for adding or editing one <see cref="AiSkillsTemplate"/> used by "Use
+/// AI to answer" mode: skills name, prompt, optional hosted web search tool, and
 /// optional MCP servers.
 /// </summary>
-public partial class AiTaskDialog : Window
+public partial class AiSkillsDialog : Window
 {
-    private readonly IReadOnlyCollection<string> _otherTaskNames;
+    private readonly IReadOnlyCollection<string> _otherSkillsNames;
 
     /// <summary>Live UI rows for configured MCP servers, kept in sync with <see cref="McpServersPanel"/>.</summary>
     private readonly List<(CheckBox Enabled, TextBox Url)> _mcpRows = new();
 
     /// <summary>The edited/created template, populated when the dialog closes with <c>DialogResult == true</c>.</summary>
-    public AiTaskTemplate Result { get; private set; } = new();
+    public AiSkillsTemplate Result { get; private set; } = new();
 
     /// <param name="template">Existing template to edit, or null to add a new one.</param>
-    /// <param name="otherTaskNames">
+    /// <param name="otherSkillsNames">
     /// Names of the other templates already configured (excluding <paramref name="template"/>
     /// itself), used to reject duplicate names.
     /// </param>
-    public AiTaskDialog(AiTaskTemplate? template, IReadOnlyCollection<string> otherTaskNames)
+    public AiSkillsDialog(AiSkillsTemplate? template, IReadOnlyCollection<string> otherSkillsNames)
     {
         InitializeComponent();
 
-        _otherTaskNames = otherTaskNames;
-        Title = template is null ? "Add AI Task" : "Edit AI Task";
+        _otherSkillsNames = otherSkillsNames;
+        Title = template is null ? "Add AI Skills" : "Edit AI Skills";
 
-        TaskNameTextBox.Text = template?.Name ?? string.Empty;
-        TaskPromptTextBox.Text = template?.Prompt ?? string.Empty;
+        SkillsNameTextBox.Text = template?.Name ?? string.Empty;
+        SkillsPromptTextBox.Text = template?.Prompt ?? string.Empty;
         UseWebSearchCheckBox.IsChecked = template?.UseWebSearch ?? false;
 
         foreach (var server in template?.McpServers ?? new List<McpServerEntry>())
@@ -92,23 +92,23 @@ public partial class AiTaskDialog : Window
 
     private void OnOkClick(object sender, RoutedEventArgs e)
     {
-        var name = TaskNameTextBox.Text.Trim();
+        var name = SkillsNameTextBox.Text.Trim();
         if (string.IsNullOrWhiteSpace(name))
         {
-            ValidationText.Text = "Task name is required.";
+            ValidationText.Text = "Skills name is required.";
             return;
         }
 
-        if (_otherTaskNames.Contains(name, StringComparer.OrdinalIgnoreCase))
+        if (_otherSkillsNames.Contains(name, StringComparer.OrdinalIgnoreCase))
         {
-            ValidationText.Text = "An AI task with this name already exists.";
+            ValidationText.Text = "An AI skills entry with this name already exists.";
             return;
         }
 
-        Result = new AiTaskTemplate
+        Result = new AiSkillsTemplate
         {
             Name = name,
-            Prompt = TaskPromptTextBox.Text,
+            Prompt = SkillsPromptTextBox.Text,
             UseWebSearch = UseWebSearchCheckBox.IsChecked == true,
             McpServers = _mcpRows
                 .Where(row => !string.IsNullOrWhiteSpace(row.Url.Text))

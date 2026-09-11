@@ -21,28 +21,28 @@ public sealed class AiCaptureSettings
     /// (e.g. "Translate to Korean", "Describe"). Ignored by "Use AI capture" mode
     /// (which always extracts Markdown).
     /// </summary>
-    public List<AiTaskTemplate> AiTasks { get; set; } = CreateDefaultAiTasks();
+    public List<AiSkillsTemplate> AiSkills { get; set; } = CreateDefaultAiSkills();
 
-    /// <summary>Name of the <see cref="AiTaskTemplate"/> last selected for "Use AI to answer" mode.</summary>
-    public string? SelectedAiTaskName { get; set; }
+    /// <summary>Name of the <see cref="AiSkillsTemplate"/> last selected for "Use AI to answer" mode.</summary>
+    public string? SelectedAiSkillsName { get; set; }
 
     public const string DefaultBaseUrl = "https://api.openai.com/v1";
     public const string DefaultModel = "gpt-4o-mini";
 
-    /// <summary>The built-in AI Task templates offered out of the box on a fresh install.</summary>
-    public static List<AiTaskTemplate> CreateDefaultAiTasks() => new()
+    /// <summary>The built-in AI Skills templates offered out of the box on a fresh install.</summary>
+    public static List<AiSkillsTemplate> CreateDefaultAiSkills() => new()
     {
-        new AiTaskTemplate
+        new AiSkillsTemplate
         {
             Name = "Translate to Korean",
             Prompt = "Translate the user's text into Korean as accurately and naturally as possible.",
         },
-        new AiTaskTemplate
+        new AiSkillsTemplate
         {
             Name = "Describe",
             Prompt = "Analyze the captured image and describe as accurately and concisely as possible.",
         },
-        new AiTaskTemplate
+        new AiSkillsTemplate
         {
             Name = "Explain",
             Prompt = "Extract the keywords or key trends from user's text. Explain new trends, background and provide insights\n" +
@@ -50,7 +50,7 @@ public sealed class AiCaptureSettings
                      "Add citations to the sources you used in your answer, and provide links to the relevant documentation.",
             UseWebSearch = true,
         },
-        new AiTaskTemplate
+        new AiSkillsTemplate
         {
             Name = "Azure Question",
             Prompt = "Answer the user's question as accurately and concisely as possible.\n" +
