@@ -2,7 +2,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 
-// Standalone generator that renders the CaptureIt camera icon at multiple
+// Standalone generator that renders the SnipAgent camera icon at multiple
 // resolutions and packs them into a PNG-compressed multi-size .ico file.
 // Kept identical in spirit to TrayIconManager.CreateCameraIcon so the tray,
 // taskbar and window icons all share one design.

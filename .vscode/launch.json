@@ -5,13 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "CaptureIt.App (Debug)",
+            "name": "SnipAgent.App (Debug)",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build CaptureIt.App",
-            "program": "${workspaceFolder}/src/CaptureIt.App/bin/Debug/net10.0-windows10.0.19041.0/CaptureIt.dll",
+            "preLaunchTask": "build SnipAgent.App",
+            "program": "${workspaceFolder}/src/SnipAgent.App/bin/Debug/net10.0-windows10.0.19041.0/SnipAgent.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/CaptureIt.App",
+            "cwd": "${workspaceFolder}/src/SnipAgent.App",
             "console": "internalConsole",
             "stopAtEntry": false
         },

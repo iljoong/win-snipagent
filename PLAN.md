@@ -1,7 +1,7 @@
-# CaptureIt — Windows Screenshot Capture App
+# SnipAgent — Windows Screenshot Capture App
 
-**Status: Implemented.** All items below have been built (see `src/CaptureIt.App/` and
-`src/CaptureIt.Tests/`). This document is kept as the design record and rationale.
+**Status: Implemented.** All items below have been built (see `src/SnipAgent.App/` and
+`src/SnipAgent.Tests/`). This document is kept as the design record and rationale.
 
 ## Problem
 Build a Windows desktop screenshot tool (C#/.NET 10, WPF) that runs quietly in the system
@@ -55,7 +55,7 @@ user-configured folder with a full settings window.
   - Live preview of the pattern in the Settings UI.
 - **Fallback folder policy**: if the configured save folder becomes invalid (deleted,
   unplugged drive, permission denied), automatically fall back to
-  `%Pictures%\CaptureIt`, save the capture there, and show a failure/fallback
+  `%Pictures%\SnipAgent`, save the capture there, and show a failure/fallback
   notification.
 
 ### Feedback / notifications
@@ -70,7 +70,7 @@ Covers:
 - Filename pattern editor with live preview.
 - Hotkey remapping control (with conflict validation).
 - (No auto-start-with-Windows option — user launches manually.)
-- Settings persisted as JSON at `%AppData%\CaptureIt\settings.json`, with safe recovery
+- Settings persisted as JSON at `%AppData%\SnipAgent\settings.json`, with safe recovery
   to defaults if the file is missing/corrupted.
 
 ### Explicitly out of scope / unsupported (documented to user)
@@ -99,9 +99,9 @@ Covers:
 
 ## Actual Project Structure
 ```
-CaptureIt.slnx
+SnipAgent.slnx
 src/
-  CaptureIt.App/                     # WPF tray app (net10.0-windows)
+  SnipAgent.App/                     # WPF tray app (net10.0-windows)
     App.xaml(.cs)                    # Startup, single-instance mutex, wiring
     app.manifest                     # Per-Monitor DPI Aware V2, asInvoker
     Models/                          # AppSettings, MonitorInfo, CaptureMode, HotkeyDefinition
@@ -111,7 +111,7 @@ src/
     Overlays/                        # RegionSelectOverlayWindow, MonitorPickerOverlayWindow, native window positioning
     TrayIcon/                        # TrayIconManager + TaskbarCreatedListener
     Core/                            # CaptureController (orchestration)
-  CaptureIt.Tests/                   # xUnit tests (net10.0-windows, EnableWindowsTargeting)
+  SnipAgent.Tests/                   # xUnit tests (net10.0-windows, EnableWindowsTargeting)
     ImageSaveServiceFileNameTests.cs
     SettingsServiceTests.cs
     ScreenCaptureServiceCropTests.cs

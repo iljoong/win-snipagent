@@ -2,12 +2,12 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build CaptureIt.App",
+            "label": "build SnipAgent.App",
             "type": "process",
             "command": "dotnet",
             "args": [
                 "build",
-                "${workspaceFolder}/src/CaptureIt.App/CaptureIt.App.csproj",
+                "${workspaceFolder}/src/SnipAgent.App/SnipAgent.App.csproj",
                 "-c",
                 "Debug"
             ],

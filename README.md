@@ -1,4 +1,4 @@
-# CaptureIt
+# SnipAgent
 
 A Windows-only screenshot capture tool (.NET 10, WPF) that runs in the system tray.
 
@@ -20,7 +20,7 @@ A Windows-only screenshot capture tool (.NET 10, WPF) that runs in the system tr
   capture and stays non-blocking in the tray app.
 - Screenshots are saved as PNG to a configured folder, using a configurable filename
   pattern (default `Screenshot_{datetime}.png`), with automatic collision suffixing
-  (`_001`, `_002`, ...) and automatic fallback to `%Pictures%\CaptureIt` if the
+  (`_001`, `_002`, ...) and automatic fallback to `%Pictures%\SnipAgent` if the
   configured folder becomes unavailable.
 - Optional **OCR text extraction** (disabled by default, toggled in Settings): runs
   Windows' built-in OCR (`Windows.Media.Ocr`) on every captured screenshot and saves
@@ -46,7 +46,7 @@ A Windows-only screenshot capture tool (.NET 10, WPF) that runs in the system tr
     this mode.
 - Silent on successful captures; shows a Windows notification only on failures
   (e.g. hotkey conflicts, save-folder problems, OCR errors).
-- Settings persisted as JSON at `%AppData%\CaptureIt\settings.json`.
+- Settings persisted as JSON at `%AppData%\SnipAgent\settings.json`.
 
 See `docs` in the session history / `plan.md` used during design for the full set of
 design decisions and the rubber-duck design review that shaped this implementation
@@ -55,9 +55,9 @@ design decisions and the rubber-duck design review that shaped this implementati
 ## Project layout
 
 ```
-CaptureIt.slnx
+SnipAgent.slnx
 src/
-  CaptureIt.App/     # WPF tray app (net10.0-windows10.0.19041.0)
+  SnipAgent.App/     # WPF tray app (net10.0-windows10.0.19041.0)
     Models/           # AppSettings, MonitorInfo, CaptureMode, HotkeyDefinition
     Settings/         # SettingsService (JSON persistence) + Settings window
     Hotkeys/          # RegisterHotKey-based global hotkey manager
@@ -65,7 +65,7 @@ src/
     Overlays/          # Region-select overlay, monitor-picker overlay, AI answer overlay (with opacity slider)
     TrayIcon/          # Tray icon + context menu, Explorer-restart resilience
     Core/              # CaptureController orchestration
-  CaptureIt.Tests/    # xUnit tests for pure logic (filename rules, settings I/O, crop math)
+  SnipAgent.Tests/    # xUnit tests for pure logic (filename rules, settings I/O, crop math)
 ```
 
 ## Building
