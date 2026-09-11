@@ -1,0 +1,24 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "CaptureIt.App (Debug)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build CaptureIt.App",
+            "program": "${workspaceFolder}/src/CaptureIt.App/bin/Debug/net10.0-windows10.0.19041.0/CaptureIt.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/CaptureIt.App",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach"
+        }
+    ]
+}
