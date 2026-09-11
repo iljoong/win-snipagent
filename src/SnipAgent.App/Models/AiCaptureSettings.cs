@@ -1,3 +1,6 @@
+using System.IO;
+using System.Text.Json;
+
 namespace SnipAgent.App.Models;
 
 /// <summary>
@@ -29,41 +32,100 @@ public sealed class AiCaptureSettings
     public const string DefaultBaseUrl = "https://api.openai.com/v1";
     public const string DefaultModel = "gpt-5.6-sol";
 
-    /// <summary>The built-in AI Skills templates offered out of the box on a fresh install.</summary>
-    public static List<AiSkillsTemplate> CreateDefaultAiSkills() => new()
+    /// <summary>
+    /// Logical name of the embedded JSON asset (source: <c>Assets\default-ai-skills.json</c>)
+    /// holding the built-in AI Skills templates. Pinned via <c>LogicalName</c> in the csproj
+    /// so renaming the folder or root namespace can't silently break this lookup.
+    /// </summary>
+    internal const string DefaultAiSkillsResourceName = "SnipAgent.App.Assets.default-ai-skills.json";
+
+    private static readonly JsonSerializerOptions DefaultAiSkillsJsonOptions = new()
     {
-        new AiSkillsTemplate
-        {
-            Name = "Translate to Korean",
-            Prompt = "Translate all readable text in the screenshot into natural Korean.\n" +
-                     "Preserve the original meaning, tone, structure, proper nouns, code, and URLs.\n" +
-                     "Return only the translation. Mark unreadable text as [illegible] instead of guessing.",
-        },
-        new AiSkillsTemplate
-        {
-            Name = "Describe Screenshot",
-            Prompt = "Describe the screenshot accurately and concisely.\n" +
-                     "Identify the main content, relevant visible text, layout, and UI state.\n" +
-                     "Separate direct observations from inferences, and do not invent unreadable or hidden details.",
-        },
-        new AiSkillsTemplate
-        {
-            Name = "Research & Explain",
-            Prompt = "Analyze the content in the screenshot and identify its key topics, claims, and trends.\n" +
-                     "Explain the relevant background, significance, and practical implications.\n" +
-                     "Use web search to verify time-sensitive claims and add current context. Prefer authoritative primary sources.\n" +
-                     "Cite web-supported claims with inline links and finish with a brief Sources list.\n" +
-                     "Clearly label uncertainty or inference, and do not guess at unreadable content.",
-            UseWebSearch = true,
-        },
-        new AiSkillsTemplate
-        {
-            Name = "Azure Expert",
-            Prompt = "Answer the question or complete the task shown in the screenshot accurately and concisely.\n" +
-                     "Use the Microsoft Learn documentation tools to verify claims about Microsoft or Azure products and prefer official documentation.\n" +
-                     "Cite supporting sources with inline links and finish with a brief Sources list.\n" +
-                     "State any necessary assumptions, and do not guess at unreadable or missing details.",
-            McpServers = new List<McpServerEntry> { new() { Enabled = true, Url = "https://learn.microsoft.com/api/mcp" } },
-        },
+        PropertyNameCaseInsensitive = true,
+        ReadCommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true
     };
+
+    /// <summary>
+    /// The asset is immutable for the process lifetime, so read it off the assembly once.
+    /// Only the raw JSON is cached — each caller gets freshly deserialized instances
+    /// (see <see cref="CreateDefaultAiSkills"/>).
+    /// </summary>
+    private static readonly Lazy<string?> DefaultAiSkillsJson = new(ReadDefaultAiSkillsJson);
+
+    /// <summary>
+    /// The built-in AI Skills templates offered out of the box on a fresh install, loaded
+    /// from the embedded <c>Assets\default-ai-skills.json</c> asset.
+    /// <para>
+    /// Returns a new list of new instances on every call: callers (the settings dialog's
+    /// "Restore defaults", and the <see cref="AiSkills"/> initializer) mutate what they get
+    /// back, which must not leak into the cached defaults.
+    /// </para>
+    /// <para>
+    /// Never throws — this runs while constructing settings for a tray-only background app
+    /// that must always be able to start, so a missing or malformed asset degrades to an
+    /// empty list rather than taking the app down.
+    /// </para>
+    /// </summary>
+    public static List<AiSkillsTemplate> CreateDefaultAiSkills()
+    {
+        var json = DefaultAiSkillsJson.Value;
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return new List<AiSkillsTemplate>();
+        }
+
+        List<AiSkillsTemplate>? templates;
+        try
+        {
+            templates = JsonSerializer.Deserialize<List<AiSkillsTemplate>>(json, DefaultAiSkillsJsonOptions);
+        }
+        catch (JsonException)
+        {
+            return new List<AiSkillsTemplate>();
+        }
+
+        if (templates is null)
+        {
+            return new List<AiSkillsTemplate>();
+        }
+
+        // Drop unusable entries and normalize nullable collections the JSON may omit.
+        var usable = new List<AiSkillsTemplate>(templates.Count);
+        foreach (var template in templates)
+        {
+            if (template is null ||
+                string.IsNullOrWhiteSpace(template.Name) ||
+                string.IsNullOrWhiteSpace(template.Prompt))
+            {
+                continue;
+            }
+
+            template.McpServers ??= new List<McpServerEntry>();
+            usable.Add(template);
+        }
+
+        return usable;
+    }
+
+    private static string? ReadDefaultAiSkillsJson()
+    {
+        try
+        {
+            using var stream = typeof(AiCaptureSettings).Assembly
+                .GetManifestResourceStream(DefaultAiSkillsResourceName);
+            if (stream is null)
+            {
+                return null;
+            }
+
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
+        catch (Exception ex) when (ex is IOException or FileLoadException or NotSupportedException)
+        {
+            return null;
+        }
+    }
 }
+

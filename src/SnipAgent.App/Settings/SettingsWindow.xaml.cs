@@ -215,21 +215,36 @@ public partial class SettingsWindow : Window
         RefreshAiSkillsComboBox(_aiSkills.FirstOrDefault());
     }
 
-    /// <summary>Adds back any of the built-in AI Skills templates whose name isn't already present.</summary>
+    /// <summary>
+    /// Resets the AI Skills list back to exactly the built-in templates, discarding
+    /// edits to the built-ins as well as any user-added ones. This is destructive, so
+    /// it's confirmed first; like every other change here it only reaches settings.json
+    /// once the user saves.
+    /// </summary>
     private void OnAiSkillsRestoreDefaultsClick(object sender, RoutedEventArgs e)
     {
-        var existingNames = new HashSet<string>(_aiSkills.Select(t => t.Name), StringComparer.OrdinalIgnoreCase);
-        var added = AiCaptureSettings.CreateDefaultAiSkills()
-            .Where(t => !existingNames.Contains(t.Name))
-            .ToList();
+        var defaults = AiCaptureSettings.CreateDefaultAiSkills();
+        if (defaults.Count == 0)
+        {
+            // CreateDefaultAiSkills degrades to an empty list when the embedded asset is
+            // missing or malformed. Resetting to nothing would be worse than not resetting.
+            System.Windows.MessageBox.Show(this,
+                "The built-in AI skills could not be loaded, so the list was left unchanged.",
+                "SnipAgent", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
 
-        if (added.Count == 0)
+        var confirm = System.Windows.MessageBox.Show(this,
+            "Reset the AI skills list to the built-in defaults?\n\n" +
+            "Any skills you added, and any changes you made to the built-in skills, will be discarded.",
+            "SnipAgent", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+        if (confirm != MessageBoxResult.OK)
         {
             return;
         }
 
-        _aiSkills.AddRange(added);
-        RefreshAiSkillsComboBox(added[0]);
+        _aiSkills = defaults;
+        RefreshAiSkillsComboBox(_aiSkills[0]);
     }
 
     private void OnBrowseFolderClick(object sender, RoutedEventArgs e)

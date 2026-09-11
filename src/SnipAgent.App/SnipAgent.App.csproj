@@ -30,6 +30,13 @@
   <ItemGroup>
     <!-- Tray/window icon loaded at runtime via pack URI (see TrayIconManager). -->
     <Resource Include="Assets\capture.ico" />
+    <!-- Built-in AI Skills prompt templates, deserialized at runtime by
+         AiCaptureSettings.CreateDefaultAiSkills(). Embedded (rather than copied to the
+         output folder) so the defaults are always available regardless of how the app
+         is deployed. LogicalName is pinned so renaming the folder/root namespace can't
+         silently break the lookup. -->
+    <EmbeddedResource Include="Assets\default-ai-skills.json"
+                      LogicalName="SnipAgent.App.Assets.default-ai-skills.json" />
   </ItemGroup>
 
   <ItemGroup>

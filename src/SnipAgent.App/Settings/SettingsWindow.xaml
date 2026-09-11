@@ -85,7 +85,7 @@
 
                             <DockPanel Margin="0,12,0,2">
                                 <Button DockPanel.Dock="Right" x:Name="AiSkillsRestoreDefaultsButton" Content="Restore defaults"
-                                        Padding="6,2" ToolTip="Add back any missing pre-defined AI skills"
+                                        Padding="6,2" ToolTip="Reset the AI skills list to the built-in defaults, discarding your additions and edits"
                                         Click="OnAiSkillsRestoreDefaultsClick" />
                                 <TextBlock Text="Skills Prompt:" VerticalAlignment="Center" />
                             </DockPanel>

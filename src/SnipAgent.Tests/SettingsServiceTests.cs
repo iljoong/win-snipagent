@@ -143,16 +143,44 @@ public class SettingsServiceTests : IDisposable
 
         Assert.Equal("gpt-5.6-sol", settings.Model);
         Assert.Equal(
-            new[] { "Translate to Korean", "Describe Screenshot", "Research & Explain", "Azure Expert" },
+            new[] { "Translate to Korean", "Describe Screenshot", "AI Tutor", "Research & Explain", "Azure Expert" },
             settings.AiSkills.Select(skills => skills.Name));
 
-        var researchSkills = settings.AiSkills[2];
+        // Looked up by name rather than index so reordering the built-ins doesn't
+        // silently move these capability assertions onto the wrong skill.
+        var researchSkills = settings.AiSkills.Single(s => s.Name == "Research & Explain");
         Assert.True(researchSkills.UseWebSearch);
         Assert.Contains("authoritative primary sources", researchSkills.Prompt);
 
-        var azureSkills = settings.AiSkills[3];
+        var azureSkills = settings.AiSkills.Single(s => s.Name == "Azure Expert");
         Assert.Single(azureSkills.McpServers);
         Assert.Equal("https://learn.microsoft.com/api/mcp", azureSkills.McpServers[0].Url);
+
+        var tutorSkills = settings.AiSkills.Single(s => s.Name == "AI Tutor");
+        Assert.False(tutorSkills.UseWebSearch);
+        Assert.Empty(tutorSkills.McpServers);
+        Assert.Contains("step by step", tutorSkills.Prompt);
+    }
+
+    [Fact]
+    public void CreateDefaultAiSkills_ReturnsIndependentInstancesPerCall()
+    {
+        // The defaults are deserialized from a cached copy of the embedded JSON asset;
+        // callers mutate what they get back, so that must never leak between calls.
+        // This is what lets "Restore defaults" hand its result straight to the working
+        // list without corrupting the defaults for the next reset.
+        var first = AiCaptureSettings.CreateDefaultAiSkills();
+        var firstCount = first.Count;
+        first[0].Prompt = "mutated";
+        first.Single(s => s.Name == "Azure Expert").McpServers.Clear();
+        first.RemoveAt(1);
+
+        var second = AiCaptureSettings.CreateDefaultAiSkills();
+
+        Assert.Equal(firstCount, second.Count);
+        Assert.NotSame(first[0], second[0]);
+        Assert.DoesNotContain("mutated", second[0].Prompt);
+        Assert.Single(second.Single(s => s.Name == "Azure Expert").McpServers);
     }
 
     [Theory]

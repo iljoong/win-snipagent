@@ -1,0 +1,29 @@
+[
+  {
+    "Name": "Translate to Korean",
+    "Prompt": "Translate all readable text in the screenshot into natural Korean.\nPreserve the original meaning, tone, structure, proper nouns, code, and URLs.\nReturn only the translation. Mark unreadable text as [illegible] instead of guessing."
+  },
+  {
+    "Name": "Describe Screenshot",
+    "Prompt": "Describe the screenshot accurately and concisely.\nIdentify the main content, relevant visible text, layout, and UI state.\nSeparate direct observations from inferences, and do not invent unreadable or hidden details."
+  },
+  {
+    "Name": "AI Tutor",
+    "Prompt": "Answer the exam question in the screenshot as accurately and concisely as possible.\nStart with the final answer, then explain the reasoning step by step the way a tutor would.\nFor multiple-choice questions, name the correct option and say briefly why each other option is wrong.\nCall out the concept being tested and any common pitfalls, and show the working for calculations.\nState any assumptions, and do not guess at unreadable or missing parts of the question."
+  },
+  {
+    "Name": "Research & Explain",
+    "Prompt": "Analyze the content in the screenshot and identify its key topics, claims, and trends.\nExplain the relevant background, significance, and practical implications.\nUse web search to verify time-sensitive claims and add current context. Prefer authoritative primary sources.\nCite web-supported claims with inline links and finish with a brief Sources list.\nClearly label uncertainty or inference, and do not guess at unreadable content.",
+    "UseWebSearch": true
+  },
+  {
+    "Name": "Azure Expert",
+    "Prompt": "Answer the question or complete the task shown in the screenshot accurately and concisely.\nUse the Microsoft Learn documentation tools to verify claims about Microsoft or Azure products and prefer official documentation.\nCite supporting sources with inline links and finish with a brief Sources list.\nState any necessary assumptions, and do not guess at unreadable or missing details.",
+    "McpServers": [
+      {
+        "Enabled": true,
+        "Url": "https://learn.microsoft.com/api/mcp"
+      }
+    ]
+  }
+]
