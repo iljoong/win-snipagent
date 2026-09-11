@@ -37,6 +37,9 @@
          silently break the lookup. -->
     <EmbeddedResource Include="Assets\default-ai-skills.json"
                       LogicalName="SnipAgent.App.Assets.default-ai-skills.json" />
+    <!-- System prompt used to reconstruct screenshot content as Markdown. -->
+    <EmbeddedResource Include="Assets\ai-capture-markdown-prompt.txt"
+                      LogicalName="SnipAgent.App.Assets.ai-capture-markdown-prompt.txt" />
   </ItemGroup>
 
   <ItemGroup>

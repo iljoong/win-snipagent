@@ -17,6 +17,11 @@ namespace SnipAgent.App.Capture;
 /// </summary>
 public static class AiCaptureService
 {
+    internal const string MarkdownExtractionPromptResourceName =
+        "SnipAgent.App.Assets.ai-capture-markdown-prompt.txt";
+
+    private static readonly Lazy<string> MarkdownExtractionPrompt = new(LoadMarkdownExtractionPrompt);
+
     /// <summary>
     /// Runs the "Use AI capture" flow: extracts the screenshot's visible content as
     /// well-formatted Markdown. Blocks the calling thread until the response is
@@ -31,15 +36,30 @@ public static class AiCaptureService
 
         var messages = new List<ChatMessage>
         {
-            new(ChatRole.System,
-                "You are an assistant that transcribes the visible content of a screenshot into " +
-                "clean, well-structured Markdown (headings, lists, tables, and code blocks where " +
-                "applicable). Respond with the Markdown only — no commentary, no surrounding code fence."),
+            new(ChatRole.System, MarkdownExtractionPrompt.Value),
             new(ChatRole.User, [ToImageContent(bitmap)]),
         };
 
         var response = await client.GetResponseAsync(messages, cancellationToken: cancellationToken).ConfigureAwait(false);
         return response.Text ?? string.Empty;
+    }
+
+    internal static string LoadMarkdownExtractionPrompt()
+    {
+        using var stream = typeof(AiCaptureService).Assembly
+            .GetManifestResourceStream(MarkdownExtractionPromptResourceName)
+            ?? throw new InvalidOperationException(
+                $"Embedded AI capture prompt '{MarkdownExtractionPromptResourceName}' was not found.");
+        using var reader = new StreamReader(stream);
+        var prompt = reader.ReadToEnd();
+
+        if (string.IsNullOrWhiteSpace(prompt))
+        {
+            throw new InvalidOperationException(
+                $"Embedded AI capture prompt '{MarkdownExtractionPromptResourceName}' is empty.");
+        }
+
+        return prompt;
     }
 
     /// <summary>
