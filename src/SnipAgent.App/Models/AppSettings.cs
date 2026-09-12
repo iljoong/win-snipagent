@@ -81,12 +81,33 @@ public sealed class AppSettings
     /// </summary>
     public double AiAnswerOverlayOpacity { get; set; } = DefaultAiAnswerOverlayOpacity;
 
+    /// <summary>
+    /// Remembered AI answer overlay dimensions in WPF device-independent pixels.
+    /// They are normalized on load and constrained to the target monitor when the
+    /// overlay opens.
+    /// </summary>
+    public double AiAnswerOverlayWidth { get; set; } = DefaultAiAnswerOverlayWidth;
+    public double AiAnswerOverlayHeight { get; set; } = DefaultAiAnswerOverlayHeight;
+
     public const double DefaultAiAnswerOverlayOpacity = 0.93;
     public const double MinAiAnswerOverlayOpacity = 0.2;
+    public const double DefaultAiAnswerOverlayWidth = 760;
+    public const double DefaultAiAnswerOverlayHeight = 520;
+    public const double MinAiAnswerOverlayWidth = 480;
+    public const double MinAiAnswerOverlayHeight = 320;
 
     /// <summary>Clamps an arbitrary (possibly hand-edited) overlay opacity into the supported range.</summary>
     public static double NormalizeAiAnswerOverlayOpacity(double value) =>
         double.IsNaN(value) ? DefaultAiAnswerOverlayOpacity : Math.Clamp(value, MinAiAnswerOverlayOpacity, 1.0);
+
+    public static double NormalizeAiAnswerOverlayWidth(double value) =>
+        NormalizeAiAnswerOverlayDimension(value, MinAiAnswerOverlayWidth, DefaultAiAnswerOverlayWidth);
+
+    public static double NormalizeAiAnswerOverlayHeight(double value) =>
+        NormalizeAiAnswerOverlayDimension(value, MinAiAnswerOverlayHeight, DefaultAiAnswerOverlayHeight);
+
+    private static double NormalizeAiAnswerOverlayDimension(double value, double minimum, double defaultValue) =>
+        double.IsFinite(value) && value >= minimum ? value : defaultValue;
 
     /// <summary>The delay values the UI offers and the only ones treated as valid. 0 = Off.</summary>
     public static readonly IReadOnlyList<int> SupportedCaptureDelays = new[] { 0, 3, 5, 10 };

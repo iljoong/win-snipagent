@@ -69,6 +69,8 @@ public class SettingsServiceTests : IDisposable
         settings.FilenamePattern = "Custom_{date}";
         settings.SaveFolder = _tempDir;
         settings.AiCapture.SelectedAiSkillsName = "AI Tutor";
+        settings.AiAnswerOverlayWidth = 880;
+        settings.AiAnswerOverlayHeight = 640;
 
         service.Save(settings);
         var reloaded = service.Load();
@@ -77,6 +79,8 @@ public class SettingsServiceTests : IDisposable
         Assert.Equal("Custom_{date}", reloaded.FilenamePattern);
         Assert.Equal(_tempDir, reloaded.SaveFolder);
         Assert.Equal("AI Tutor", reloaded.AiCapture.SelectedAiSkillsName);
+        Assert.Equal(880, reloaded.AiAnswerOverlayWidth);
+        Assert.Equal(640, reloaded.AiAnswerOverlayHeight);
     }
 
     [Fact]
@@ -136,6 +140,50 @@ public class SettingsServiceTests : IDisposable
     public void NewSettings_SavingDefaultsToSaveToFile()
     {
         Assert.Equal(SavingOption.SaveToFile, new AppSettings().Saving);
+    }
+
+    [Theory]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    [InlineData(0)]
+    public void NormalizeOverlaySize_WhenInvalid_ReturnsDefaults(double value)
+    {
+        Assert.Equal(
+            AppSettings.DefaultAiAnswerOverlayWidth,
+            AppSettings.NormalizeAiAnswerOverlayWidth(value));
+        Assert.Equal(
+            AppSettings.DefaultAiAnswerOverlayHeight,
+            AppSettings.NormalizeAiAnswerOverlayHeight(value));
+    }
+
+    [Fact]
+    public void Load_WhenOverlaySizeUndersized_NormalizesToDefaults()
+    {
+        var json = JsonSerializer.Serialize(new
+        {
+            SaveFolder = _tempDir,
+            FilenamePattern = "x",
+            LastCaptureMode = 0,
+            Hotkey = new { Modifiers = 2, VirtualKey = 0x53 },
+            AiAnswerOverlayWidth = AppSettings.MinAiAnswerOverlayWidth - 1,
+            AiAnswerOverlayHeight = AppSettings.MinAiAnswerOverlayHeight - 1
+        });
+        var service = CreateServiceWithFile(json);
+
+        var settings = service.Load();
+
+        Assert.Equal(AppSettings.DefaultAiAnswerOverlayWidth, settings.AiAnswerOverlayWidth);
+        Assert.Equal(AppSettings.DefaultAiAnswerOverlayHeight, settings.AiAnswerOverlayHeight);
+    }
+
+    [Fact]
+    public void NewSettings_OverlaySizeUsesDefaults()
+    {
+        var settings = new AppSettings();
+
+        Assert.Equal(AppSettings.DefaultAiAnswerOverlayWidth, settings.AiAnswerOverlayWidth);
+        Assert.Equal(AppSettings.DefaultAiAnswerOverlayHeight, settings.AiAnswerOverlayHeight);
     }
 
     [Fact]

@@ -7,8 +7,25 @@
         ShowInTaskbar="False"
         Topmost="True"
         ResizeMode="NoResize"
-        Width="760" Height="520">
-    <Border CornerRadius="12" Padding="20">
+        Width="760" Height="520"
+        MinWidth="480" MinHeight="320">
+    <Grid>
+        <Grid.Resources>
+            <Style x:Key="ResizeThumbStyle" TargetType="{x:Type Thumb}">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Focusable" Value="False" />
+                <Setter Property="Panel.ZIndex" Value="10" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type Thumb}">
+                            <Border Background="{TemplateBinding Background}" />
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Grid.Resources>
+
+        <Border CornerRadius="12" Padding="20">
         <Border.Background>
             <SolidColorBrush x:Name="PanelBackgroundBrush" Color="#1E1E1E" Opacity="0.93" />
         </Border.Background>
@@ -20,15 +37,16 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left"
-                        VerticalAlignment="Center" Margin="0,0,0,12">
-                <TextBlock Text="AI Skill" Foreground="#AAAAAA" FontSize="11"
-                           VerticalAlignment="Center" Margin="0,0,8,0" />
-                <ComboBox x:Name="AiSkillsComboBox" Width="280" MinHeight="28"
-                          HorizontalAlignment="Left"
-                          Background="#661E1E1E"
-                          BorderBrush="#66FFFFFF"
-                          Foreground="White">
+            <Grid Grid.Row="0" Margin="0,0,0,12">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="AI Skill" Foreground="#AAAAAA" FontSize="11"
+                               VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <ComboBox x:Name="AiSkillsComboBox" Width="280" MinHeight="28"
+                              HorizontalAlignment="Left"
+                              Background="#661E1E1E"
+                              BorderBrush="#66FFFFFF"
+                              Foreground="White">
                     <ComboBox.Resources>
                         <Style TargetType="{x:Type ComboBoxItem}">
                             <Setter Property="Background" Value="Transparent" />
@@ -133,8 +151,49 @@
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </ComboBox.Template>
-                </ComboBox>
-            </StackPanel>
+                    </ComboBox>
+                </StackPanel>
+
+                <Button x:Name="CloseButton"
+                        Width="30" Height="30"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Foreground="#CCCCCC"
+                        FontFamily="Segoe MDL2 Assets"
+                        FontSize="12"
+                        Content="&#xE8BB;"
+                        ToolTip="Close"
+                        AutomationProperties.Name="Close AI answer"
+                        Click="OnCloseClick">
+                    <Button.Style>
+                        <Style TargetType="{x:Type Button}">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type Button}">
+                                        <Border x:Name="CloseBorder"
+                                                Background="{TemplateBinding Background}"
+                                                CornerRadius="4">
+                                            <ContentPresenter HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="CloseBorder" Property="Background" Value="#44FFFFFF" />
+                                                <Setter Property="Foreground" Value="White" />
+                                            </Trigger>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter TargetName="CloseBorder" Property="Background" Value="#66FFFFFF" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
 
             <TextBlock Grid.Row="1" Text="AI answer" FontSize="18" FontWeight="Bold"
                        Foreground="White" Margin="0,0,0,12"
@@ -151,6 +210,10 @@
             </ScrollViewer>
 
             <Grid Grid.Row="3" Margin="0,12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
                     <TextBlock Text="Opacity" Foreground="#AAAAAA" FontSize="11"
                                VerticalAlignment="Center" Margin="0,0,8,0" />
@@ -161,9 +224,37 @@
                             ValueChanged="OnOpacityChanged" />
                 </StackPanel>
                 <TextBlock x:Name="InteractionHint" Text="Press Enter to run, or Esc to cancel"
+                           Grid.Column="1"
                            Foreground="#AAAAAA" FontSize="11"
                            HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Grid>
         </Grid>
-    </Border>
+        </Border>
+
+        <Thumb Style="{StaticResource ResizeThumbStyle}" Tag="Left"
+               Width="8" HorizontalAlignment="Left" VerticalAlignment="Stretch"
+               Cursor="SizeWE" DragDelta="OnResizeDragDelta" />
+        <Thumb Style="{StaticResource ResizeThumbStyle}" Tag="Right"
+               Width="8" HorizontalAlignment="Right" VerticalAlignment="Stretch"
+               Cursor="SizeWE" DragDelta="OnResizeDragDelta" />
+        <Thumb Style="{StaticResource ResizeThumbStyle}" Tag="Top"
+               Height="8" HorizontalAlignment="Stretch" VerticalAlignment="Top"
+               Cursor="SizeNS" DragDelta="OnResizeDragDelta" />
+        <Thumb Style="{StaticResource ResizeThumbStyle}" Tag="Bottom"
+               Height="8" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
+               Cursor="SizeNS" DragDelta="OnResizeDragDelta" />
+
+        <Thumb Style="{StaticResource ResizeThumbStyle}" Tag="TopLeft"
+               Width="14" Height="14" HorizontalAlignment="Left" VerticalAlignment="Top"
+               Cursor="SizeNWSE" DragDelta="OnResizeDragDelta" />
+        <Thumb Style="{StaticResource ResizeThumbStyle}" Tag="TopRight"
+               Width="14" Height="14" HorizontalAlignment="Right" VerticalAlignment="Top"
+               Cursor="SizeNESW" DragDelta="OnResizeDragDelta" />
+        <Thumb Style="{StaticResource ResizeThumbStyle}" Tag="BottomLeft"
+               Width="14" Height="14" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+               Cursor="SizeNESW" DragDelta="OnResizeDragDelta" />
+        <Thumb Style="{StaticResource ResizeThumbStyle}" Tag="BottomRight"
+               Width="14" Height="14" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+               Cursor="SizeNWSE" DragDelta="OnResizeDragDelta" />
+    </Grid>
 </Window>

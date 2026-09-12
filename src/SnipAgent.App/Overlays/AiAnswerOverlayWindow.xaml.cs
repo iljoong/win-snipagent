@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
@@ -32,18 +33,13 @@ public partial class AiAnswerOverlayWindow : Window
     private readonly SettingsService _settingsService;
     private readonly System.Drawing.Rectangle _targetBounds;
     private double _lastSavedOpacity;
+    private double _lastSavedWidth;
+    private double _lastSavedHeight;
     private string? _lastSavedAiSkillsName;
     private CancellationTokenSource? _answerCancellation;
     private OverlayState _state;
     private bool _isClosing;
-    private bool _hasBeenMovedByUser;
-
-    // The overlay's intended size in device-independent (WPF) units, captured from
-    // XAML before the window is shown. Used to compute the centered position; WPF
-    // itself owns the actual (DPI-scaled) window size, so these never change even as
-    // the window moves between monitors of differing DPI.
-    private readonly double _intendedWidthDip;
-    private readonly double _intendedHeightDip;
+    private bool _hasBeenPositionedByUser;
 
     /// <summary>
     /// The answer produced by the AI call, captured so the caller can also save it
@@ -61,9 +57,16 @@ public partial class AiAnswerOverlayWindow : Window
         _settings = settings;
         _settingsService = settingsService;
         _targetBounds = targetBounds;
-        _intendedWidthDip = Width;
-        _intendedHeightDip = Height;
+        MinWidth = AppSettings.MinAiAnswerOverlayWidth;
+        MinHeight = AppSettings.MinAiAnswerOverlayHeight;
+        _lastSavedWidth = settings.AiAnswerOverlayWidth;
+        _lastSavedHeight = settings.AiAnswerOverlayHeight;
         _lastSavedAiSkillsName = settings.AiCapture.SelectedAiSkillsName;
+
+        ApplyMonitorSizeConstraints(
+            targetBounds,
+            AppSettings.NormalizeAiAnswerOverlayWidth(settings.AiAnswerOverlayWidth),
+            AppSettings.NormalizeAiAnswerOverlayHeight(settings.AiAnswerOverlayHeight));
 
         // Restore the remembered overlay opacity; setting the slider value drives
         // OnOpacityChanged, which applies it to the panel background brush.
@@ -104,10 +107,14 @@ public partial class AiAnswerOverlayWindow : Window
     {
         _isClosing = true;
         _answerCancellation?.Cancel();
+        CaptureOverlaySize();
 
-        // Persist any unsaved opacity or skill selection. The normal path saves the
-        // selected skill when execution starts; this also retries if that save failed.
+        // Persist any unsaved overlay preference or skill selection. The normal path
+        // saves the selected skill when execution starts; this also retries if that
+        // save failed and captures the final resized dimensions.
         if (Math.Abs(_settings.AiAnswerOverlayOpacity - _lastSavedOpacity) < 0.0001 &&
+            Math.Abs(_settings.AiAnswerOverlayWidth - _lastSavedWidth) < 0.0001 &&
+            Math.Abs(_settings.AiAnswerOverlayHeight - _lastSavedHeight) < 0.0001 &&
             string.Equals(
                 _settings.AiCapture.SelectedAiSkillsName,
                 _lastSavedAiSkillsName,
@@ -120,6 +127,8 @@ public partial class AiAnswerOverlayWindow : Window
         {
             _settingsService.Save(_settings);
             _lastSavedOpacity = _settings.AiAnswerOverlayOpacity;
+            _lastSavedWidth = _settings.AiAnswerOverlayWidth;
+            _lastSavedHeight = _settings.AiAnswerOverlayHeight;
             _lastSavedAiSkillsName = _settings.AiCapture.SelectedAiSkillsName;
         }
         catch (Exception ex)
@@ -152,36 +161,33 @@ public partial class AiAnswerOverlayWindow : Window
 
     /// <summary>
     /// Re-centers the overlay over <see cref="_targetBounds"/> by setting only its
-    /// top-left position in physical pixels — never its size. This window has a fixed
-    /// DIP size (760x520) that WPF renders at the correct physical size for whichever
-    /// monitor it currently occupies, so we must let WPF own sizing. Earlier attempts
-    /// that also set the physical *size* desynced WPF's DIP model: moving the window
-    /// onto a monitor with a different DPI fires WM_DPICHANGED, and WPF re-scales the
-    /// window by the DPI ratio — compounding with our manual size and shrinking (or
-    /// growing) the overlay on every transition. By repositioning only, WPF keeps the
-    /// size correct and we just keep it centered. The centered top-left is derived
-    /// from the intended DIP size scaled by the *target* monitor's DPI (via
-    /// <see cref="NativeWindowPositioning.GetCenteredPhysicalBounds"/>), matching the
-    /// physical size WPF will render there. Re-applied after WM_DPICHANGED settles
-    /// (from <see cref="WndProc"/>) and in <see cref="OnLoaded"/> to correct the
-    /// proportional reposition WPF applies during the DPI transition.
+    /// top-left position in physical pixels. WPF continues to own the remembered DIP
+    /// size so moving between monitors cannot compound DPI scaling.
     /// </summary>
     private void ApplyCenteredPosition(IntPtr hwnd)
     {
         var bounds = NativeWindowPositioning.GetCenteredPhysicalBounds(
-            _targetBounds, _intendedWidthDip, _intendedHeightDip);
+            _targetBounds, Width, Height);
         NativeWindowPositioning.SetWindowPositionPhysicalPixels(hwnd, bounds.Left, bounds.Top);
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if (msg == WM_DPICHANGED && !_hasBeenMovedByUser)
+        if (msg == WM_DPICHANGED)
         {
-            // Let WPF apply its DPI-driven resize/reposition first, then re-center the
-            // (correctly WPF-sized) window over the target once that has settled.
-            // Repositioning within the same monitor does not fire another
-            // WM_DPICHANGED, so this cannot loop.
-            Dispatcher.BeginInvoke(new Action(() => ApplyCenteredPosition(hwnd)), DispatcherPriority.Loaded);
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                var windowBounds = NativeWindowPositioning.GetWindowBoundsPhysicalPixels(hwnd);
+                ApplyMonitorSizeConstraints(
+                    windowBounds.IsEmpty ? _targetBounds : windowBounds,
+                    Width,
+                    Height);
+
+                if (!_hasBeenPositionedByUser)
+                {
+                    ApplyCenteredPosition(hwnd);
+                }
+            }), DispatcherPriority.Loaded);
         }
 
         return IntPtr.Zero;
@@ -194,7 +200,7 @@ public partial class AiAnswerOverlayWindow : Window
             return;
         }
 
-        _hasBeenMovedByUser = true;
+        _hasBeenPositionedByUser = true;
         DragMove();
     }
 
@@ -202,8 +208,85 @@ public partial class AiAnswerOverlayWindow : Window
     {
         // Re-center now that any WM_DPICHANGED-driven adjustment from
         // SourceInitialized's initial move has already settled (see ApplyCenteredPosition).
-        var hwnd = new WindowInteropHelper(this).Handle;
-        ApplyCenteredPosition(hwnd);
+        if (!_hasBeenPositionedByUser)
+        {
+            var hwnd = new WindowInteropHelper(this).Handle;
+            ApplyCenteredPosition(hwnd);
+        }
+    }
+
+    private void OnResizeDragDelta(object sender, DragDeltaEventArgs e)
+    {
+        if (sender is not Thumb { Tag: string direction })
+        {
+            return;
+        }
+
+        _hasBeenPositionedByUser = true;
+
+        bool resizeLeft = direction.Contains("Left", StringComparison.Ordinal);
+        bool resizeRight = direction.Contains("Right", StringComparison.Ordinal);
+        bool resizeTop = direction.Contains("Top", StringComparison.Ordinal);
+        bool resizeBottom = direction.Contains("Bottom", StringComparison.Ordinal);
+
+        if (resizeLeft || resizeRight)
+        {
+            double oldWidth = ActualWidth;
+            double desiredWidth = oldWidth + (resizeLeft ? -e.HorizontalChange : e.HorizontalChange);
+            double newWidth = Math.Clamp(desiredWidth, MinWidth, MaxWidth);
+            if (resizeLeft)
+            {
+                Left += oldWidth - newWidth;
+            }
+            Width = newWidth;
+        }
+
+        if (resizeTop || resizeBottom)
+        {
+            double oldHeight = ActualHeight;
+            double desiredHeight = oldHeight + (resizeTop ? -e.VerticalChange : e.VerticalChange);
+            double newHeight = Math.Clamp(desiredHeight, MinHeight, MaxHeight);
+            if (resizeTop)
+            {
+                Top += oldHeight - newHeight;
+            }
+            Height = newHeight;
+        }
+    }
+
+    private void ApplyMonitorSizeConstraints(
+        System.Drawing.Rectangle monitorTargetBounds,
+        double desiredWidth,
+        double desiredHeight)
+    {
+        var workArea = NativeWindowPositioning.GetMonitorWorkAreaSizeDip(monitorTargetBounds);
+        MaxWidth = Math.Max(MinWidth, workArea.WidthDip);
+        MaxHeight = Math.Max(MinHeight, workArea.HeightDip);
+        Width = Math.Clamp(
+            AppSettings.NormalizeAiAnswerOverlayWidth(desiredWidth),
+            MinWidth,
+            MaxWidth);
+        Height = Math.Clamp(
+            AppSettings.NormalizeAiAnswerOverlayHeight(desiredHeight),
+            MinHeight,
+            MaxHeight);
+    }
+
+    private void CaptureOverlaySize()
+    {
+        _settings.AiAnswerOverlayWidth = AppSettings.NormalizeAiAnswerOverlayWidth(ActualWidth);
+        _settings.AiAnswerOverlayHeight = AppSettings.NormalizeAiAnswerOverlayHeight(ActualHeight);
+    }
+
+    private void RequestClose()
+    {
+        Close();
+    }
+
+    private void OnCloseClick(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        RequestClose();
     }
 
     private async Task StartSelectedSkillAsync()
@@ -270,10 +353,14 @@ public partial class AiAnswerOverlayWindow : Window
 
     private string? PersistSettings()
     {
+        CaptureOverlaySize();
+
         try
         {
             _settingsService.Save(_settings);
             _lastSavedOpacity = _settings.AiAnswerOverlayOpacity;
+            _lastSavedWidth = _settings.AiAnswerOverlayWidth;
+            _lastSavedHeight = _settings.AiAnswerOverlayHeight;
             _lastSavedAiSkillsName = _settings.AiCapture.SelectedAiSkillsName;
             return null;
         }
@@ -289,7 +376,7 @@ public partial class AiAnswerOverlayWindow : Window
         if (e.Key == Key.Escape)
         {
             e.Handled = true;
-            Close();
+            RequestClose();
             return;
         }
 
@@ -305,7 +392,7 @@ public partial class AiAnswerOverlayWindow : Window
         }
         else if (_state == OverlayState.Finished)
         {
-            Close();
+            RequestClose();
         }
     }
 

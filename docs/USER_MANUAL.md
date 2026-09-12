@@ -256,13 +256,18 @@ in the center of the selected region or monitor.
 - Press **Esc** before starting to close the overlay without sending a request.
 - Press **Esc** while a request is running to cancel the request and close the
   overlay.
+- Select the close button in the upper-right corner to close the overlay. During a
+  request, the button cancels the request before closing, just like **Esc**.
 - The last Skill you ran is remembered and preselected the next time the overlay
   opens.
 - Drag the `AI answer` heading to move the overlay.
+- Drag any edge or corner to resize the overlay. Its minimum size is 480 x 320, and
+  the last size is remembered for the next capture. Each new overlay is centered
+  over the captured area; its previous screen position is not remembered.
 - Use the **Opacity** slider in the lower-left corner to set the background opacity
   from 20% to 100%. You can also focus the slider and use the arrow keys.
-- The last opacity value is stored in `settings.json` and applied the next time the
-  overlay opens. It cannot be changed from the Settings window.
+- The last size and opacity values are stored in `settings.json` and applied the
+  next time the overlay opens. They cannot be changed from the Settings window.
 
 When file saving is enabled, the AI Skills `.md` result contains both the Markdown
 extracted from the capture and the Skill's answer, under the `Extracted text` and

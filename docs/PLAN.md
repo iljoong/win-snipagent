@@ -155,9 +155,13 @@ Extraction failures do not prevent the PNG from being saved.
 
 ### AI answer overlay
 
-- Always-on-top, fixed-size overlay centered on the captured region or monitor.
+- Always-on-top, resizable overlay centered on the captured region or monitor.
 - Correctly repositions across monitors with different DPI settings.
 - The title can be dragged to move the overlay manually.
+- Edges and corners resize the overlay down to a 480 x 320 minimum, and the last
+  size is remembered.
+- An upper-right close button closes the overlay and cancels an active request,
+  matching **Esc**.
 - The user chooses an AI Skill, then presses **Enter** to run it.
 - **Esc** closes the overlay and cancels an active request.
 - **Enter** or **Esc** closes the overlay after completion.

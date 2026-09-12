@@ -36,11 +36,12 @@ WPF. It runs in the system tray without a main window.
   - **Use AI capture** extracts captured content as formatted Markdown.
   - **Use AI to answer** opens an always-on-top answer overlay where the user
     selects an AI skill and presses **Enter** to run it against the capture. The
-    last selected skill is remembered. Press **Enter** or **Esc** to close the
-    result; Esc also cancels a running request. The overlay is centered over the
-    captured area and includes an opacity slider whose value is remembered in
-    `settings.json`. Skills can optionally use hosted web search and MCP tool
-    servers.
+    last selected skill is remembered. Press **Enter**, **Esc**, or the upper-right
+    close button to close the result; Esc and the close button also cancel a
+    running request. The overlay is centered over the captured area, can be moved
+    and resized from its edges or corners, and remembers its size. It also includes
+    an opacity slider whose value is remembered in `settings.json`. Skills can
+    optionally use hosted web search and MCP tool servers.
 - Successful captures are silent. Windows notifications are shown only for
   failures such as hotkey conflicts, save-folder problems, and OCR errors.
 - Settings are stored at `%AppData%\SnipAgent\settings.json`.
@@ -93,12 +94,28 @@ Run the tests on Windows:
 dotnet test
 ```
 
+Before completing a change, run the repository verification entry point, which
+builds the solution and executes the full automated test suite:
+
+```powershell
+.\scripts\verify.ps1
+```
+
 The tests cover pure logic without invoking UI or platform interoperability:
 
 - Filename pattern expansion and sanitization
 - Settings JSON round-tripping and corruption recovery
 - Coordinate calculations for cropping regions and monitors from the frozen
   desktop bitmap, including negative-coordinate multi-monitor layouts
+
+## Agent-assisted development
+
+[AGENTS.md](../AGENTS.md) is the canonical repository guide for coding agents.
+Medium or multi-session changes use lightweight
+[feature specifications](./specs/README.md), while architecturally significant
+decisions use append-only [architecture decision records](./adr/README.md).
+Reusable project skills under `.github/skills/` help create and maintain those
+documents without requiring them for small changes.
 
 ## Known limitations
 

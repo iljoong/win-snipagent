@@ -19,6 +19,9 @@ internal static class NativeWindowPositioning
     [DllImport("user32.dll")]
     private static extern IntPtr MonitorFromRect(ref NativeMethods.RECT lprc, uint dwFlags);
 
+    [DllImport("user32.dll")]
+    private static extern bool GetWindowRect(IntPtr hWnd, out NativeMethods.RECT lpRect);
+
     [DllImport("shcore.dll")]
     private static extern int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out uint dpiX, out uint dpiY);
 
@@ -79,14 +82,48 @@ internal static class NativeWindowPositioning
     /// Computes a window rectangle, in physical pixels, sized from the given
     /// device-independent (WPF) dimensions — scaled by the DPI of the monitor
     /// nearest <paramref name="targetBoundsPhysicalPixels"/> — and centered within
-    /// that area (e.g. the selected region or the captured monitor). The result is
-    /// clamped so the window never exceeds the target area, keeping it fully
-    /// visible even when centered on a small selected region.
+    /// that area (e.g. the selected region or the captured monitor). The position
+    /// is constrained to the nearest monitor's work area so a target near a screen
+    /// edge cannot make the window unreachable.
     /// </summary>
     public static Rectangle GetCenteredPhysicalBounds(
         Rectangle targetBoundsPhysicalPixels, double desiredWidthDip, double desiredHeightDip)
     {
-        double dpiScale = 1.0;
+        var (dpiScale, workArea) = GetMonitorMetrics(targetBoundsPhysicalPixels);
+
+        int width = (int)Math.Round(desiredWidthDip * dpiScale);
+        int height = (int)Math.Round(desiredHeightDip * dpiScale);
+        width = Math.Min(width, workArea.Width);
+        height = Math.Min(height, workArea.Height);
+
+        int x = targetBoundsPhysicalPixels.Left + (targetBoundsPhysicalPixels.Width - width) / 2;
+        int y = targetBoundsPhysicalPixels.Top + (targetBoundsPhysicalPixels.Height - height) / 2;
+        x = Math.Clamp(x, workArea.Left, workArea.Right - width);
+        y = Math.Clamp(y, workArea.Top, workArea.Bottom - height);
+
+        return new Rectangle(x, y, width, height);
+    }
+
+    public static (double WidthDip, double HeightDip) GetMonitorWorkAreaSizeDip(
+        Rectangle targetBoundsPhysicalPixels)
+    {
+        var (dpiScale, workArea) = GetMonitorMetrics(targetBoundsPhysicalPixels);
+        return (workArea.Width / dpiScale, workArea.Height / dpiScale);
+    }
+
+    public static Rectangle GetWindowBoundsPhysicalPixels(IntPtr hwnd)
+    {
+        if (!GetWindowRect(hwnd, out var rect))
+        {
+            return Rectangle.Empty;
+        }
+
+        return Rectangle.FromLTRB(rect.Left, rect.Top, rect.Right, rect.Bottom);
+    }
+
+    private static (double DpiScale, Rectangle WorkArea) GetMonitorMetrics(
+        Rectangle targetBoundsPhysicalPixels)
+    {
         var rect = new NativeMethods.RECT
         {
             Left = targetBoundsPhysicalPixels.Left,
@@ -96,22 +133,32 @@ internal static class NativeWindowPositioning
         };
 
         var hMonitor = MonitorFromRect(ref rect, MONITOR_DEFAULTTONEAREST);
-        if (hMonitor != IntPtr.Zero && GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, out uint dpiX, out _) == 0)
+        double dpiScale = 1.0;
+        if (hMonitor != IntPtr.Zero &&
+            GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, out uint dpiX, out _) == 0)
         {
             dpiScale = dpiX / 96.0;
         }
 
-        int width = (int)Math.Round(desiredWidthDip * dpiScale);
-        int height = (int)Math.Round(desiredHeightDip * dpiScale);
+        var workArea = targetBoundsPhysicalPixels;
+        if (hMonitor != IntPtr.Zero)
+        {
+            var monitorInfo = new NativeMethods.MONITORINFOEX
+            {
+                cbSize = Marshal.SizeOf<NativeMethods.MONITORINFOEX>(),
+                szDevice = string.Empty
+            };
+            if (NativeMethods.GetMonitorInfo(hMonitor, ref monitorInfo))
+            {
+                workArea = Rectangle.FromLTRB(
+                    monitorInfo.rcWork.Left,
+                    monitorInfo.rcWork.Top,
+                    monitorInfo.rcWork.Right,
+                    monitorInfo.rcWork.Bottom);
+            }
+        }
 
-        const int margin = 40;
-        width = Math.Min(width, Math.Max(200, targetBoundsPhysicalPixels.Width - margin));
-        height = Math.Min(height, Math.Max(150, targetBoundsPhysicalPixels.Height - margin));
-
-        int x = targetBoundsPhysicalPixels.Left + (targetBoundsPhysicalPixels.Width - width) / 2;
-        int y = targetBoundsPhysicalPixels.Top + (targetBoundsPhysicalPixels.Height - height) / 2;
-
-        return new Rectangle(x, y, width, height);
+        return (dpiScale, workArea);
     }
 
     /// <summary>
