@@ -101,6 +101,16 @@ builds the solution and executes the full automated test suite:
 .\scripts\verify.ps1
 ```
 
+On Ubuntu, including the default Copilot cloud-agent environment, run the
+compile-only gate:
+
+```bash
+bash ./scripts/verify-ubuntu.sh
+```
+
+It restores and builds the Windows-targeted solution with isolated artifacts,
+but it does not run tests and does not replace Windows verification.
+
 The tests cover pure logic without invoking UI or platform interoperability:
 
 - Filename pattern expansion and sanitization
@@ -115,7 +125,11 @@ Medium or multi-session changes use lightweight
 [feature specifications](./specs/README.md), while architecturally significant
 decisions use append-only [architecture decision records](./adr/README.md).
 Reusable project skills under `.github/skills/` help create and maintain those
-documents without requiring them for small changes.
+documents without requiring them for small changes. Cloud delegation uses the
+`cloud-execution` skill and the
+[Copilot cloud execution guide](./CLOUD_EXECUTION.md); cloud work stays on an
+agent-owned task branch and draft PR until Windows validation and human review
+are complete.
 
 ## Known limitations
 

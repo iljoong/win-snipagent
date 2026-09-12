@@ -45,7 +45,18 @@ decision.
 
 ## Verification evidence
 
-Record exact commands, results, and any manual Windows validation.
+### Cloud or Ubuntu
+
+Record exact commands and results. State explicitly that Ubuntu compilation
+does not run the Windows-targeted tests.
+
+### Windows automated
+
+Record focused tests and the final `.\scripts\verify.ps1` result.
+
+### Manual Windows
+
+Record each required interactive scenario and its result.
 
 ## Related decisions
 

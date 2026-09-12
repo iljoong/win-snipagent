@@ -31,6 +31,9 @@ The .NET 10 SDK is required.
 # Build and run all automated tests.
 .\scripts\verify.ps1
 
+# Compile the Windows-targeted solution from Ubuntu. This does not run tests.
+bash ./scripts/verify-ubuntu.sh
+
 # Run the application on Windows.
 dotnet run --project .\src\SnipAgent.App\SnipAgent.App.csproj
 
@@ -67,11 +70,13 @@ enabled. Running the application or tests requires Windows and the
    `docs/specs/` before implementation. Use the `feature-spec` skill.
 4. Create an ADR only for a structurally significant, difficult-to-reverse, or
    cross-cutting decision. Use the `architecture-decision` skill.
-5. Implement in small, independently verifiable vertical slices.
-6. Add or update focused tests for changed behavior.
-7. Run the smallest relevant tests while iterating, then run
+5. Before delegating work to Copilot cloud agent, use the `cloud-execution`
+   skill and follow `docs/CLOUD_EXECUTION.md`.
+6. Implement in small, independently verifiable vertical slices.
+7. Add or update focused tests for changed behavior.
+8. Run the smallest relevant tests while iterating, then run
    `.\scripts\verify.ps1` before completion.
-8. Inspect the complete diff and reconcile affected documentation.
+9. Inspect the complete diff and reconcile affected documentation.
 
 Do not create permanent plan files for work that fits in one session. Do not use
 `docs/PLAN.md` as a live checklist. Do not rewrite accepted ADRs; supersede them
@@ -89,6 +94,9 @@ with a new record.
 - Significant decisions are recorded or superseded in `docs/adr/`.
 - No generated output, credentials, local settings, or unrelated changes are
   included.
+
+Ubuntu compilation with `bash ./scripts/verify-ubuntu.sh` is useful cloud-agent
+evidence, but it does not replace Windows tests or manual Windows validation.
 
 ## Sensitive changes
 

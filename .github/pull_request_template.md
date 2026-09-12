@@ -17,10 +17,11 @@
 ## Verification
 
 - [ ] Focused tests or checks were run
+- [ ] `bash ./scripts/verify-ubuntu.sh` passed, or Ubuntu compilation was not applicable
 - [ ] `.\scripts\verify.ps1` passed on Windows
 - [ ] Required manual Windows validation was completed or documented below
 
-Commands and results:
+Commands, environments, and results:
 
 ```text
 <!-- Include the commands, result, and relevant scope. -->

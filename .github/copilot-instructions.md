@@ -5,5 +5,6 @@ project commands, architecture constraints, change workflow, and definition of
 done.
 
 Use project skills from `.github/skills/` when a request involves creating or
-maintaining a feature specification or architecture decision. Do not duplicate
-the contents of `AGENTS.md` in this file.
+maintaining a feature specification or architecture decision, or preparing work
+for Copilot cloud execution. Do not duplicate the contents of `AGENTS.md` in
+this file.
