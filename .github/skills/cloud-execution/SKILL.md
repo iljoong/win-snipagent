@@ -6,7 +6,7 @@ description: Prepare, initiate, or continue SnipAgent work with GitHub Copilot c
 # Copilot cloud execution workflow
 
 Follow [the cloud execution guide](../../../docs/CLOUD_EXECUTION.md) and
-[the coding lifecycle](../../../docs/AGENT_CODING_DLC.md).
+[the coding lifecycle](../../../docs/AGENTIC_CODING_LIFECYCLE.md).
 
 ## 1. Establish the work order
 
