@@ -49,11 +49,9 @@ public sealed class AppSettings
     public int CaptureDelaySeconds { get; set; }
 
     /// <summary>
-    /// Master toggle for text extraction. When enabled, the engine selected by
-    /// <see cref="AiCaptureSettings.Mode"/> (Windows OCR, AI capture, or AI answer)
-    /// runs on every captured screenshot; its output is then saved per
-    /// <see cref="Saving"/>. When disabled, no text is extracted and captures are
-    /// stored as images only. Disabled by default.
+    /// Legacy compatibility flag for settings written before
+    /// <see cref="AiCaptureMode.None"/> was introduced. New code uses
+    /// <see cref="AiCaptureSettings.Mode"/> as the source of truth.
     /// </summary>
     public bool OcrEnabled { get; set; }
 

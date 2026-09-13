@@ -84,6 +84,41 @@ public class SettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public void SaveThenLoad_WhenAiCaptureIsNone_PreservesDisabledMode()
+    {
+        var service = CreateServiceWithFile();
+        var settings = service.Load();
+        settings.OcrEnabled = false;
+        settings.AiCapture.Mode = AiCaptureMode.None;
+
+        service.Save(settings);
+        var reloaded = service.Load();
+
+        Assert.Equal(AiCaptureMode.None, reloaded.AiCapture.Mode);
+        Assert.False(reloaded.OcrEnabled);
+    }
+
+    [Fact]
+    public void Load_WhenLegacyExtractionIsDisabled_NormalizesAiSkillsModeToNone()
+    {
+        var json = JsonSerializer.Serialize(new
+        {
+            SaveFolder = _tempDir,
+            FilenamePattern = "x",
+            LastCaptureMode = 0,
+            Hotkey = new { Modifiers = 2, VirtualKey = 0x53 },
+            OcrEnabled = false,
+            AiCapture = new { Mode = AiCaptureMode.Answer }
+        });
+        var service = CreateServiceWithFile(json);
+
+        var settings = service.Load();
+
+        Assert.Equal(AiCaptureMode.None, settings.AiCapture.Mode);
+        Assert.False(settings.OcrEnabled);
+    }
+
+    [Fact]
     public void Load_WhenSaveFolderIsBlank_FallsBackToDefault()
     {
         var json = JsonSerializer.Serialize(new { SaveFolder = "", FilenamePattern = "x", LastCaptureMode = 0, Hotkey = new { Modifiers = 2, VirtualKey = 0x53 } });
@@ -140,6 +175,15 @@ public class SettingsServiceTests : IDisposable
     public void NewSettings_SavingDefaultsToSaveToFile()
     {
         Assert.Equal(SavingOption.SaveToFile, new AppSettings().Saving);
+    }
+
+    [Fact]
+    public void NewSettings_AiCaptureDefaultsToNone()
+    {
+        var settings = new AppSettings();
+
+        Assert.Equal(AiCaptureMode.None, settings.AiCapture.Mode);
+        Assert.False(settings.OcrEnabled);
     }
 
     [Theory]

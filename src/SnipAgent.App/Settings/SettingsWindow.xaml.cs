@@ -113,7 +113,7 @@ public partial class SettingsWindow : Window
     {
         var choices = new List<AiModeChoice>
         {
-            new("None", AiCaptureMode.WindowsOcr, false),
+            new("None", AiCaptureMode.None, false),
             new("Extract text (Windows OCR)", AiCaptureMode.WindowsOcr, true),
             new("Extract text (Using LLM)", AiCaptureMode.Capture, true),
             new("Use AI Skills", AiCaptureMode.Answer, true),
@@ -121,8 +121,7 @@ public partial class SettingsWindow : Window
         ExtractMethodComboBox.ItemsSource = choices;
         ExtractMethodComboBox.DisplayMemberPath = nameof(AiModeChoice.Label);
         ExtractMethodComboBox.SelectedItem = choices.FirstOrDefault(choice =>
-            choice.IsEnabled == _workingCopy.OcrEnabled &&
-            (!_workingCopy.OcrEnabled || choice.Mode == _workingCopy.AiCapture.Mode)) ?? choices[0];
+            choice.Mode == _workingCopy.AiCapture.Mode) ?? choices[0];
         UpdateAiSkillsEnabled();
 
         AiBaseUrlTextBox.Text = _workingCopy.AiCapture.BaseUrl;
@@ -357,7 +356,7 @@ public partial class SettingsWindow : Window
         _workingCopy.OcrEnabled = selectedAiMode?.IsEnabled == true;
         _workingCopy.Saving = SavingOptionComboBox.SelectedValue is SavingOption saving ? saving : SavingOption.SaveToFile;
 
-        _workingCopy.AiCapture.Mode = selectedAiMode?.Mode ?? AiCaptureMode.WindowsOcr;
+        _workingCopy.AiCapture.Mode = selectedAiMode?.Mode ?? AiCaptureMode.None;
         _workingCopy.AiCapture.BaseUrl = string.IsNullOrWhiteSpace(AiBaseUrlTextBox.Text)
             ? AiCaptureSettings.DefaultBaseUrl
             : AiBaseUrlTextBox.Text.Trim();

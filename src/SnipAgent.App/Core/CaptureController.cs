@@ -154,7 +154,7 @@ public sealed class CaptureController
         // The AI answer overlay is the on-screen display for "Use AI to answer"; it runs
         // regardless of the saving option. Its answer is captured so it can also be saved.
         string? aiAnswer = null;
-        if (settings.OcrEnabled && settings.AiCapture.Mode == AiCaptureMode.Answer)
+        if (settings.AiCapture.Mode == AiCaptureMode.Answer)
         {
             aiAnswer = RunAiAnswerFlow(bitmap, settings, bounds);
         }
@@ -210,7 +210,9 @@ public sealed class CaptureController
         }
 
         // Extract once (if enabled) and reuse for both file and clipboard destinations.
-        string? extractedText = settings.OcrEnabled ? ExtractText(bitmap, settings, aiAnswer) : null;
+        string? extractedText = settings.AiCapture.Mode != AiCaptureMode.None
+            ? ExtractText(bitmap, settings, aiAnswer)
+            : null;
 
         if (settings.Saving.SavesToFile())
         {
@@ -238,6 +240,7 @@ public sealed class CaptureController
                 AiCaptureMode.Capture => AiCaptureService.ExtractMarkdown(bitmap, settings),
                 AiCaptureMode.Answer => CombineExtractedTextAndAnswer(
                     AiCaptureService.ExtractMarkdown(bitmap, settings), aiAnswer),
+                AiCaptureMode.None => null,
                 _ => null
             };
         }
@@ -290,7 +293,7 @@ public sealed class CaptureController
                 $"Saved to {result.SavedFilePath} instead.");
         }
 
-        if (settings.OcrEnabled && !string.IsNullOrEmpty(extractedText))
+        if (settings.AiCapture.Mode != AiCaptureMode.None && !string.IsNullOrEmpty(extractedText))
         {
             try
             {
@@ -313,7 +316,7 @@ public sealed class CaptureController
     {
         try
         {
-            if (settings.OcrEnabled)
+            if (settings.AiCapture.Mode != AiCaptureMode.None)
             {
                 if (string.IsNullOrEmpty(extractedText))
                 {

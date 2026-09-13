@@ -69,6 +69,13 @@ public sealed class SettingsService
             settings.AiAnswerOverlayHeight = AppSettings.NormalizeAiAnswerOverlayHeight(settings.AiAnswerOverlayHeight);
 
             settings.AiCapture ??= new AiCaptureSettings();
+            if (!settings.OcrEnabled ||
+                !Enum.IsDefined(settings.AiCapture.Mode) ||
+                settings.AiCapture.Mode == AiCaptureMode.None)
+            {
+                settings.AiCapture.Mode = AiCaptureMode.None;
+                settings.OcrEnabled = false;
+            }
             if (string.IsNullOrWhiteSpace(settings.AiCapture.BaseUrl))
             {
                 settings.AiCapture.BaseUrl = AiCaptureSettings.DefaultBaseUrl;

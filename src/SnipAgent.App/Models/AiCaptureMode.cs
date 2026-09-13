@@ -7,11 +7,14 @@ namespace SnipAgent.App.Models;
 public enum AiCaptureMode
 {
     /// <summary>Uses the built-in Windows OCR engine to extract plain text from the capture.</summary>
-    WindowsOcr,
+    WindowsOcr = 0,
 
     /// <summary>Uses the configured OpenAI-compatible endpoint to extract the capture's content as formatted Markdown.</summary>
-    Capture,
+    Capture = 1,
 
     /// <summary>Uses the configured OpenAI-compatible endpoint to answer/act on the "Prompt" text using the capture as context, and shows the answer in an overlay instead of saving.</summary>
-    Answer
+    Answer = 2,
+
+    /// <summary>Disables text extraction and AI Skills so the captured image is stored directly.</summary>
+    None = 3
 }

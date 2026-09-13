@@ -11,7 +11,7 @@ namespace SnipAgent.App.Models;
 /// </summary>
 public sealed class AiCaptureSettings
 {
-    public AiCaptureMode Mode { get; set; } = AiCaptureMode.WindowsOcr;
+    public AiCaptureMode Mode { get; set; } = AiCaptureMode.None;
 
     /// <summary>Base URL of the OpenAI-compatible endpoint (e.g. https://api.openai.com/v1).</summary>
     public string BaseUrl { get; set; } = DefaultBaseUrl;
