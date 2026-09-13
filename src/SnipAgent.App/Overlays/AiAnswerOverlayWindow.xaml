@@ -201,13 +201,27 @@
                        ToolTip="Drag to move this window"
                        MouseLeftButtonDown="OnDragHandleMouseLeftButtonDown" />
 
-            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-                <TextBlock x:Name="AnswerText"
-                           Text="Choose an AI skill, then press Enter to run."
-                           TextWrapping="Wrap"
-                           FontSize="15"
-                           Foreground="#EEEEEE" />
-            </ScrollViewer>
+            <Grid Grid.Row="2">
+                <ScrollViewer x:Name="AnswerTextScrollViewer" VerticalScrollBarVisibility="Auto">
+                    <TextBlock x:Name="AnswerText"
+                               Text="Choose an AI skill, then press Enter to run."
+                               TextWrapping="Wrap"
+                               FontSize="15"
+                               Foreground="#EEEEEE" />
+                </ScrollViewer>
+                <RichTextBox x:Name="AnswerMarkdownViewer"
+                             Visibility="Collapsed"
+                             IsReadOnly="True"
+                             IsReadOnlyCaretVisible="True"
+                             IsDocumentEnabled="True"
+                             BorderThickness="0"
+                             Padding="0"
+                             Margin="0"
+                             Background="Transparent"
+                             Foreground="#EEEEEE"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Disabled" />
+            </Grid>
 
             <Grid Grid.Row="3" Margin="0,12,0,0">
                 <Grid.ColumnDefinitions>

@@ -7,6 +7,7 @@ using System.Windows.Interop;
 using System.Windows.Threading;
 using SnipAgent.App.Capture;
 using SnipAgent.App.Models;
+using SnipAgent.App.Overlays.Markdown;
 using SnipAgent.App.Settings;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
@@ -40,6 +41,7 @@ public partial class AiAnswerOverlayWindow : Window
     private OverlayState _state;
     private bool _isClosing;
     private bool _hasBeenPositionedByUser;
+    private readonly AiAnswerMarkdownPresenter _markdownPresenter;
 
     /// <summary>
     /// The answer produced by the AI call, captured so the caller can also save it
@@ -57,6 +59,7 @@ public partial class AiAnswerOverlayWindow : Window
         _settings = settings;
         _settingsService = settingsService;
         _targetBounds = targetBounds;
+        _markdownPresenter = new AiAnswerMarkdownPresenter(AiAnswerMarkdownPresenter.OpenHttpLinkInDefaultBrowser);
         MinWidth = AppSettings.MinAiAnswerOverlayWidth;
         MinHeight = AppSettings.MinAiAnswerOverlayHeight;
         _lastSavedWidth = settings.AiAnswerOverlayWidth;
@@ -81,13 +84,15 @@ public partial class AiAnswerOverlayWindow : Window
         if (AiSkillsComboBox.SelectedItem is null)
         {
             AiSkillsComboBox.IsEnabled = false;
-            AnswerText.Text = "No AI skills are configured. Add an AI skill in Settings before using this mode.";
+            ShowPlainTextMessage("No AI skills are configured. Add an AI skill in Settings before using this mode.");
             InteractionHint.Text = "Press Esc to close";
         }
 
         SourceInitialized += OnSourceInitialized;
         Loaded += OnLoaded;
-        KeyDown += OnKeyDown;
+        // Use PreviewKeyDown so Enter/Esc still control overlay lifecycle even when
+        // focus is inside selectable Markdown controls.
+        PreviewKeyDown += OnKeyDown;
         Closed += OnClosed;
     }
 
@@ -303,9 +308,9 @@ public partial class AiAnswerOverlayWindow : Window
 
         _settings.AiCapture.SelectedAiSkillsName = selectedSkills.Name;
         var persistenceWarning = PersistSettings();
-        AnswerText.Text = persistenceWarning is null
+        ShowPlainTextMessage(persistenceWarning is null
             ? "Thinking..."
-            : $"Thinking...\n\n{persistenceWarning}";
+            : $"Thinking...\n\n{persistenceWarning}");
 
         var cancellation = new CancellationTokenSource();
         _answerCancellation = cancellation;
@@ -319,20 +324,27 @@ public partial class AiAnswerOverlayWindow : Window
             }
 
             AnswerResult = answer;
-            AnswerText.Text = string.IsNullOrWhiteSpace(answer) ? "(No answer returned.)" : answer;
+            if (string.IsNullOrWhiteSpace(answer))
+            {
+                ShowPlainTextMessage("(No answer returned.)");
+            }
+            else
+            {
+                ShowMarkdownAnswer(answer);
+            }
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
             if (!_isClosing)
             {
-                AnswerText.Text = "AI request canceled.";
+                ShowPlainTextMessage("AI request canceled.");
             }
         }
         catch (Exception ex)
         {
             if (!_isClosing)
             {
-                AnswerText.Text = $"AI capture failed: {ex.Message}";
+                ShowPlainTextMessage($"AI capture failed: {ex.Message}");
             }
         }
         finally
@@ -349,6 +361,29 @@ public partial class AiAnswerOverlayWindow : Window
                 InteractionHint.Text = "Press Enter or Esc to close";
             }
         }
+    }
+
+    private void ShowMarkdownAnswer(string answer)
+    {
+        try
+        {
+            AnswerMarkdownViewer.Document = _markdownPresenter.Render(answer);
+            AnswerMarkdownViewer.Visibility = Visibility.Visible;
+            AnswerTextScrollViewer.Visibility = Visibility.Collapsed;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Failed to render markdown answer: {ex.Message}");
+            ShowPlainTextMessage($"Warning: Markdown formatting failed. Showing plain text.\n\n{answer}");
+        }
+    }
+
+    private void ShowPlainTextMessage(string message)
+    {
+        AnswerMarkdownViewer.Document = new System.Windows.Documents.FlowDocument();
+        AnswerMarkdownViewer.Visibility = Visibility.Collapsed;
+        AnswerTextScrollViewer.Visibility = Visibility.Visible;
+        AnswerText.Text = message;
     }
 
     private string? PersistSettings()

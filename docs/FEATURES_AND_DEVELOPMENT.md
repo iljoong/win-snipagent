@@ -40,8 +40,13 @@ WPF. It runs in the system tray without a main window.
     close button to close the result; Esc and the close button also cancel a
     running request. The overlay is centered over the captured area, can be moved
     and resized from its edges or corners, and remembers its size. It also includes
-    an opacity slider whose value is remembered in `settings.json`. Skills can
-    optionally use hosted web search and MCP tool servers.
+    an opacity slider whose value is remembered in `settings.json`. Completed
+    answers render as selectable dark-themed Markdown in native WPF, while
+    ready/running/canceled/failed/empty states stay as plain text. Only
+    user-activated absolute HTTP(S) links can open in the default browser;
+    relative/non-HTTP(S) links remain inert text; images are replaced with
+    blocked-image alt-text indicators; and raw HTML is rendered as literal text.
+    Skills can optionally use hosted web search and MCP tool servers.
 - Successful captures are silent. Windows notifications are shown only for
   failures such as hotkey conflicts, save-folder problems, and OCR errors.
 - Settings are stored at `%AppData%\SnipAgent\settings.json`.
