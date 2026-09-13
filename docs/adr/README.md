@@ -28,6 +28,7 @@ supersede a record.
 
 ## Decision index
 
-No architecture decision records have been accepted in this directory yet.
+- [0001: Render AI answers with WPF-UI.Markdown](./0001-render-markdown-with-wpf-ui-markdown.md)
+
 Existing choices described in [PLAN.md](../PLAN.md) are historical context; do
 not manufacture retrospective rationale for them.
