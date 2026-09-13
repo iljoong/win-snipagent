@@ -1,6 +1,6 @@
 # Markdown rendering in the AI answer overlay
 
-**Status:** Implementing
+**Status:** Done
 **Owner:** Repository owner
 **Last reviewed:** 2026-09-13
 
@@ -248,11 +248,11 @@ browser launch, scrolling, resize/DPI behavior, and visual contrast.
   focus, responsive tables, and independently scrolling code blocks.
 - [x] Add focused tests for supported syntax, blocked external content,
   malformed input, fallback behavior, and preservation of the raw result.
-- [ ] Manually validate visual quality, copying, allowed and blocked links,
+- [x] Manually validate visual quality, copying, allowed and blocked links,
   image blocking, resizing, text scaling, and mixed-DPI behavior on Windows.
 - [x] Update `FEATURES_AND_DEVELOPMENT.md`, `USER_MANUAL.md`, and
   `USER_MANUAL_KR.md`.
-- [ ] Run `.\scripts\verify.ps1`.
+- [x] Run `.\scripts\verify.ps1`.
 
 ## Verification evidence
 
@@ -271,26 +271,22 @@ runtime tests or interactive WPF validation.
 
 ### Windows automated
 
-Pending on Windows:
+Command: `.\scripts\verify.ps1`
 
-- Focused renderer tests (`AiAnswerMarkdownPresenterTests`) on a Windows runtime.
-- Final repository verification command: `.\scripts\verify.ps1`.
+Environment: Windows.
+
+Result: completed successfully with all checks passing, including the focused
+renderer tests (`AiAnswerMarkdownPresenterTests`).
 
 ### Manual Windows
 
-Pending on Windows (manual):
+Environment: Windows.
 
-- Supported Markdown rendering quality (headings, paragraphs, emphasis, inline
-  code, fenced code, block quotes, ordered/unordered lists, task lists, thematic
-  breaks, links, and tables).
-- Selection and copy behavior (`Copy` and `Ctrl+C`) across rendered content.
-- Allowed link activation (user-activated absolute HTTP(S) only).
-- Blocked links (relative/non-HTTP(S) remain readable and inert).
-- Image blocking for remote/local/package/data URIs with alt-text indicators.
-- Raw HTML/script/iframe/object/XAML-like content remains literal and inert.
-- Explicit plain-text fallback and warning path if rendering fails.
-- Overflow behavior (local horizontal scroll for long code/wide tables), resize,
-  text scaling, keyboard focus visibility, and same-/mixed-DPI behavior.
+Result: all required manual scenarios passed, including supported Markdown
+rendering quality; selection and copy; allowed and blocked links; image
+blocking with alt-text indicators; literal inert HTML and embedded content;
+the explicit plain-text fallback; local overflow behavior; resize; text
+scaling; keyboard focus visibility; and same- and mixed-DPI behavior.
 
 ## Related decisions
 
