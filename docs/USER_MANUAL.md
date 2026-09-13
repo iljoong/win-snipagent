@@ -268,6 +268,15 @@ in the center of the selected region or monitor.
   from 20% to 100%. You can also focus the slider and use the arrow keys.
 - The last size and opacity values are stored in `settings.json` and applied the
   next time the overlay opens. They cannot be changed from the Settings window.
+- Completed non-empty answers are rendered as selectable Markdown with headings,
+  lists, task lists, code blocks, quotes, links, and tables in the overlay's dark
+  style.
+- Rendering is local and restricted: embedded HTML is shown as literal text,
+  Markdown images are blocked and replaced with `[Image blocked: ...]`, and only
+  user-activated absolute `http://` or `https://` links can open in the default
+  browser. Relative and non-HTTP(S) links remain readable but inert.
+- If Markdown formatting fails, the overlay shows a warning and falls back to
+  plain text while preserving the original answer for saving.
 
 When file saving is enabled, the AI Skills `.md` result contains both the Markdown
 extracted from the capture and the Skill's answer, under the `Extracted text` and

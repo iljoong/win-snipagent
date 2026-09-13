@@ -1,6 +1,6 @@
 # Markdown rendering in the AI answer overlay
 
-**Status:** Approved
+**Status:** Implementing
 **Owner:** Repository owner
 **Last reviewed:** 2026-09-13
 
@@ -240,17 +240,17 @@ browser launch, scrolling, resize/DPI behavior, and visual contrast.
   application target and supports an application-owned renderer subclass.
 - [x] Record the selected renderer, rejected alternatives, security controls,
   and package-version policy in an ADR.
-- [ ] Add an application-owned Markdown presentation boundary with explicit
+- [x] Add an application-owned Markdown presentation boundary with explicit
   link, image, HTML, and error policies.
-- [ ] Render completed answers through that boundary while preserving the raw
+- [x] Render completed answers through that boundary while preserving the raw
   `AnswerResult` and all non-completed status paths.
-- [ ] Add overlay-local dark styles, selection/copy behavior, accessible link
+- [x] Add overlay-local dark styles, selection/copy behavior, accessible link
   focus, responsive tables, and independently scrolling code blocks.
-- [ ] Add focused tests for supported syntax, blocked external content,
+- [x] Add focused tests for supported syntax, blocked external content,
   malformed input, fallback behavior, and preservation of the raw result.
 - [ ] Manually validate visual quality, copying, allowed and blocked links,
   image blocking, resizing, text scaling, and mixed-DPI behavior on Windows.
-- [ ] Update `FEATURES_AND_DEVELOPMENT.md`, `USER_MANUAL.md`, and
+- [x] Update `FEATURES_AND_DEVELOPMENT.md`, `USER_MANUAL.md`, and
   `USER_MANUAL_KR.md`.
 - [ ] Run `.\scripts\verify.ps1`.
 
@@ -258,23 +258,39 @@ browser launch, scrolling, resize/DPI behavior, and visual contrast.
 
 ### Cloud or Ubuntu
 
-Not yet run. After implementation, record the exact
-`bash ./scripts/verify-ubuntu.sh` result and state explicitly that it compiles
-but does not run the Windows-targeted tests.
+Command: `bash ./scripts/verify-ubuntu.sh`
+
+Environment: Ubuntu cloud-agent workspace,
+`/home/runner/work/win-snipagent/win-snipagent`, .NET SDK `10.0.401`.
+
+Result: restore and compile completed successfully for `SnipAgent.App` and
+`SnipAgent.Tests` with `0 Warning(s)` and `0 Error(s)`.
+
+Limitations: compile-only evidence. This command does not execute Windows
+runtime tests or interactive WPF validation.
 
 ### Windows automated
 
-Not yet run. Record focused renderer tests and the final
-`.\scripts\verify.ps1` result.
+Pending on Windows:
+
+- Focused renderer tests (`AiAnswerMarkdownPresenterTests`) on a Windows runtime.
+- Final repository verification command: `.\scripts\verify.ps1`.
 
 ### Manual Windows
 
-Not yet run. Validate every supported Markdown element; selection and copy;
-allowed HTTP(S) and blocked relative/non-HTTP(S) links; blocked remote, local,
-data, and package images with alt-text indicators; literal inert raw HTML;
-malformed Markdown; explicit plain-text fallback; long and wide code; wide
-table-local scrolling; resize; text scaling; keyboard focus; and same- and
-mixed-DPI monitor behavior.
+Pending on Windows (manual):
+
+- Supported Markdown rendering quality (headings, paragraphs, emphasis, inline
+  code, fenced code, block quotes, ordered/unordered lists, task lists, thematic
+  breaks, links, and tables).
+- Selection and copy behavior (`Copy` and `Ctrl+C`) across rendered content.
+- Allowed link activation (user-activated absolute HTTP(S) only).
+- Blocked links (relative/non-HTTP(S) remain readable and inert).
+- Image blocking for remote/local/package/data URIs with alt-text indicators.
+- Raw HTML/script/iframe/object/XAML-like content remains literal and inert.
+- Explicit plain-text fallback and warning path if rendering fails.
+- Overflow behavior (local horizontal scroll for long code/wide tables), resize,
+  text scaling, keyboard focus visibility, and same-/mixed-DPI behavior.
 
 ## Related decisions
 

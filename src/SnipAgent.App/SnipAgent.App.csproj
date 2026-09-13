@@ -50,6 +50,7 @@
     <PackageReference Include="ModelContextProtocol.Core" Version="1.4.0" />
     <PackageReference Include="Microsoft.Extensions.AI" Version="10.7.0" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.7.0" />
+    <PackageReference Include="WPF-UI.Markdown" Version="4.0.2" />
   </ItemGroup>
 
 </Project>
