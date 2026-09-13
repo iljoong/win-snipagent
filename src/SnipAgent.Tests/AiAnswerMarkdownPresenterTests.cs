@@ -81,9 +81,8 @@ public class AiAnswerMarkdownPresenterTests
         {
             var presenter = new AiAnswerMarkdownPresenter(_ => { });
             var document = presenter.Render("| A | B |\n|---|---|\n| 1 | 2 |");
-            var tableViewers = FindDescendants<RichTextBox>(document);
-            Assert.Single(tableViewers);
-            var table = Assert.IsType<Table>(tableViewers[0].Document.Blocks.FirstBlock);
+            var table = document.Blocks.OfType<Table>().FirstOrDefault();
+            Assert.NotNull(table);
             Assert.Equal(2, table.RowGroups[0].Rows.Count);
             Assert.Equal(2, table.RowGroups[0].Rows[0].Cells.Count);
         });

@@ -24,10 +24,6 @@ using Control = System.Windows.Controls.Control;
 using FontFamily = System.Windows.Media.FontFamily;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using Inline = System.Windows.Documents.Inline;
-using MarkdigTable = Markdig.Extensions.Tables.Table;
-using MarkdigTableCell = Markdig.Extensions.Tables.TableCell;
-using MarkdigTableRow = Markdig.Extensions.Tables.TableRow;
-using RichTextBox = System.Windows.Controls.RichTextBox;
 using TableCell = System.Windows.Documents.TableCell;
 using TableRow = System.Windows.Documents.TableRow;
 using TextBox = System.Windows.Controls.TextBox;
@@ -187,6 +183,17 @@ internal sealed class AiAnswerMarkdownPresenter
         resources[Styles.TaskListStyleKey] = CreateStyle<CheckBox>(
             new Setter(Control.ForegroundProperty, new SolidColorBrush(Color.FromRgb(0xEE, 0xEE, 0xEE))),
             new Setter(Control.MarginProperty, new Thickness(0, 0, 6, 0)));
+        resources[Styles.TableStyleKey] = CreateStyle<System.Windows.Documents.Table>(
+            new Setter(Block.MarginProperty, new Thickness(0, 4, 0, 10)));
+        resources[Styles.TableCellStyleKey] = CreateStyle<TableCell>(
+            new Setter(TextElement.ForegroundProperty, new SolidColorBrush(Color.FromRgb(0xEE, 0xEE, 0xEE))),
+            new Setter(TableCell.BorderBrushProperty, new SolidColorBrush(Color.FromRgb(0x4A, 0x4A, 0x4A))),
+            new Setter(TableCell.BorderThicknessProperty, new Thickness(0, 0, 1, 1)),
+            new Setter(TableCell.PaddingProperty, new Thickness(8, 4, 8, 4)));
+        resources[Styles.TableHeaderStyleKey] = CreateStyle<TableRow>(
+            new Setter(TextElement.FontWeightProperty, FontWeights.SemiBold),
+            new Setter(TextElement.ForegroundProperty, new SolidColorBrush(Color.FromRgb(0xEE, 0xEE, 0xEE))),
+            new Setter(TextElement.BackgroundProperty, new SolidColorBrush(Color.FromRgb(0x2C, 0x2C, 0x2C))));
         resources[Styles.HyperlinkStyleKey] = CreateHyperlinkStyle();
         resources[Styles.StrikeThroughStyleKey] = CreateStyle<Span>(
             new Setter(Inline.TextDecorationsProperty, TextDecorations.Strikethrough));
@@ -267,7 +274,7 @@ internal sealed class AiAnswerMarkdownPresenter
             ObjectRenderers.Add(new LineBreakInlineRenderer());
             ObjectRenderers.Add(new SafeLinkInlineRenderer(_openHttpLink));
             ObjectRenderers.Add(new LiteralInlineRenderer());
-            ObjectRenderers.Add(new SafeTableRenderer());
+            ObjectRenderers.Add(new TableRenderer());
             ObjectRenderers.Add(new TaskListRenderer());
         }
     }
@@ -428,90 +435,6 @@ internal sealed class AiAnswerMarkdownPresenter
             }
 
             return builder.ToString();
-        }
-    }
-
-    private sealed class SafeTableRenderer : WpfObjectRenderer<MarkdigTable>
-    {
-        protected override void Write(WpfRenderer renderer, MarkdigTable table)
-        {
-            var flowTable = new System.Windows.Documents.Table
-            {
-                CellSpacing = 0
-            };
-
-            foreach (var _ in table.ColumnDefinitions)
-            {
-                flowTable.Columns.Add(new TableColumn());
-            }
-
-            var rowGroup = new TableRowGroup();
-            flowTable.RowGroups.Add(rowGroup);
-
-            foreach (var row in table)
-            {
-                if (row is not MarkdigTableRow markdigRow)
-                {
-                    continue;
-                }
-
-                var flowRow = new TableRow();
-                rowGroup.Rows.Add(flowRow);
-                foreach (var cell in markdigRow)
-                {
-                    if (cell is not MarkdigTableCell markdigCell)
-                    {
-                        continue;
-                    }
-
-                    var flowCell = new TableCell
-                    {
-                        Padding = new Thickness(8, 4, 8, 4),
-                        BorderBrush = new SolidColorBrush(Color.FromRgb(0x4A, 0x4A, 0x4A)),
-                        BorderThickness = new Thickness(0, 0, 1, 1),
-                        Background = markdigRow.IsHeader
-                            ? new SolidColorBrush(Color.FromRgb(0x2C, 0x2C, 0x2C))
-                            : Brushes.Transparent
-                    };
-
-                    renderer.Push(flowCell);
-                    ((RendererBase)renderer).Write(markdigCell);
-                    renderer.Pop();
-                    flowRow.Cells.Add(flowCell);
-                }
-            }
-
-            var tableDocument = new FlowDocument
-            {
-                PagePadding = new Thickness(0),
-                FontFamily = new FontFamily("Segoe UI"),
-                FontSize = 14,
-                Foreground = new SolidColorBrush(Color.FromRgb(0xEE, 0xEE, 0xEE))
-            };
-            tableDocument.Blocks.Add(flowTable);
-
-            var tableViewer = new RichTextBox
-            {
-                IsReadOnly = true,
-                IsReadOnlyCaretVisible = true,
-                IsDocumentEnabled = true,
-                BorderThickness = new Thickness(0),
-                Background = Brushes.Transparent,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-                Document = tableDocument
-            };
-
-            var border = new Border
-            {
-                BorderBrush = new SolidColorBrush(Color.FromRgb(0x4A, 0x4A, 0x4A)),
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(4),
-                Margin = new Thickness(0, 4, 0, 10),
-                Child = tableViewer
-            };
-
-            renderer.WriteBlock(new BlockUIContainer(border));
         }
     }
 }
