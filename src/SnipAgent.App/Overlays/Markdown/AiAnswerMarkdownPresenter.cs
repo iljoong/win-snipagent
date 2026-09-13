@@ -260,7 +260,7 @@ internal sealed class AiAnswerMarkdownPresenter
             ObjectRenderers.Add(new QuoteBlockRenderer());
             ObjectRenderers.Add(new ThematicBreakRenderer());
             ObjectRenderers.Add(new SafeAutolinkInlineRenderer(_openHttpLink));
-            ObjectRenderers.Add(new CodeInlineRenderer());
+            ObjectRenderers.Add(new SafeCodeInlineRenderer());
             ObjectRenderers.Add(new DelimiterInlineRenderer());
             ObjectRenderers.Add(new EmphasisInlineRenderer());
             ObjectRenderers.Add(new HtmlEntityInlineRenderer());
@@ -269,6 +269,21 @@ internal sealed class AiAnswerMarkdownPresenter
             ObjectRenderers.Add(new LiteralInlineRenderer());
             ObjectRenderers.Add(new SafeTableRenderer());
             ObjectRenderers.Add(new TaskListRenderer());
+        }
+    }
+
+    private sealed class SafeCodeInlineRenderer : WpfObjectRenderer<CodeInline>
+    {
+        protected override void Write(WpfRenderer renderer, CodeInline obj)
+        {
+            var run = new Run(obj.Content)
+            {
+                FontFamily = new FontFamily("Consolas"),
+                Foreground = new SolidColorBrush(Color.FromRgb(0xF1, 0xF1, 0xF1)),
+                Background = new SolidColorBrush(Color.FromRgb(0x2A, 0x2A, 0x2A))
+            };
+
+            renderer.WriteInline(run);
         }
     }
 

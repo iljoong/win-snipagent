@@ -4,6 +4,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Media;
 using SnipAgent.App.Overlays.Markdown;
 
 namespace SnipAgent.Tests;
@@ -85,6 +86,22 @@ public class AiAnswerMarkdownPresenterTests
             var table = Assert.IsType<Table>(tableViewers[0].Document.Blocks.FirstBlock);
             Assert.Equal(2, table.RowGroups[0].Rows.Count);
             Assert.Equal(2, table.RowGroups[0].Rows[0].Cells.Count);
+        });
+    }
+
+    [Fact]
+    public void Render_InlineCode_UsesLightForeground()
+    {
+        RunSta(() =>
+        {
+            var presenter = new AiAnswerMarkdownPresenter(_ => { });
+            var document = presenter.Render("`headless product`");
+            var renderedText = GetDocumentText(document);
+            Assert.Contains("headless product", renderedText);
+
+            var codeRun = FindRun(document, "headless product");
+            var codeBrush = Assert.IsType<SolidColorBrush>(codeRun.Foreground);
+            Assert.Equal(Color.FromRgb(0xF1, 0xF1, 0xF1), codeBrush.Color);
         });
     }
 
@@ -206,6 +223,57 @@ public class AiAnswerMarkdownPresenterTests
                 CollectDescendants(block, output);
             }
         }
+    }
+
+    private static Run FindRun(FlowDocument document, string text)
+    {
+        foreach (var block in document.Blocks)
+        {
+            var run = FindRunInBlock(block, text);
+            if (run is not null)
+            {
+                return run;
+            }
+        }
+
+        throw new Xunit.Sdk.XunitException($"Run containing '{text}' was not found.");
+    }
+
+    private static Run? FindRunInBlock(Block block, string text)
+    {
+        return block switch
+        {
+            Paragraph paragraph => FindRunInInlines(paragraph.Inlines, text),
+            Section section => section.Blocks.Select(child => FindRunInBlock(child, text)).FirstOrDefault(run => run is not null),
+            System.Windows.Documents.List list => list.ListItems
+                .SelectMany(item => item.Blocks.Select(child => FindRunInBlock(child, text)))
+                .FirstOrDefault(run => run is not null),
+            _ => null
+        };
+    }
+
+    private static Run? FindRunInInlines(InlineCollection inlines, string text)
+    {
+        foreach (var inline in inlines)
+        {
+            switch (inline)
+            {
+                case Run run when run.Text.Contains(text, StringComparison.Ordinal):
+                    return run;
+                case Span span:
+                {
+                    var nested = FindRunInInlines(span.Inlines, text);
+                    if (nested is not null)
+                    {
+                        return nested;
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        return null;
     }
 
     private static void RunSta(Action action)
