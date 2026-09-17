@@ -91,6 +91,42 @@ only on Windows. As a result, `dotnet run` and `dotnet test` fail on Linux and
 macOS with a "No frameworks were found" error even when `dotnet build`
 succeeds.
 
+## Versioning and releases
+
+The application version is stored in the `<Version>` property in
+`src/SnipAgent.App/SnipAgent.App.csproj`. Release tags use the same semantic
+version prefixed with `v`, such as `v0.1.0`.
+
+Agent-authored features and fixes increment the patch component once per
+complete change. Major and minor versions change only when explicitly requested
+by the repository owner. Documentation-only, test-only, and workflow-only
+changes do not increment the application version unless they accompany a
+feature or fix.
+
+Create a self-contained Windows x64 build locally with:
+
+```powershell
+dotnet publish .\src\SnipAgent.App\SnipAgent.App.csproj `
+  -c Release `
+  -r win-x64 `
+  --self-contained true `
+  -o .\Out\win-x64
+```
+
+To publish a GitHub Release, commit the intended version, create a matching
+annotated tag, and push the commit and tag:
+
+```powershell
+git tag -a v0.1.0 -m "SnipAgent 0.1.0"
+git push origin main
+git push origin v0.1.0
+```
+
+The release workflow rejects a tag that does not exactly match the project
+version. After verification, it publishes a self-contained `win-x64` ZIP and a
+SHA-256 checksum to the GitHub Release. Increment the project version before
+creating each subsequent release tag.
+
 ## Testing
 
 Run the tests on Windows:

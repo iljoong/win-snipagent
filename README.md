@@ -65,3 +65,10 @@ user-specific intelligence.
 For detailed application behavior, project structure, build instructions, and
 test guidance, see the
 [Features and development guide](./docs/FEATURES_AND_DEVELOPMENT.md).
+
+## Releases
+
+Self-contained Windows x64 packages are available from
+[GitHub Releases](https://github.com/iljoong/win-snipagent/releases). These
+packages include the required .NET runtime. Download the ZIP, extract it, and
+run `SnipAgent.exe`.

@@ -38,7 +38,7 @@ bash ./scripts/verify-ubuntu.sh
 dotnet run --project .\src\SnipAgent.App\SnipAgent.App.csproj
 
 # Publish a Windows build.
-dotnet publish .\src\SnipAgent.App\SnipAgent.App.csproj -c Release -o .\Out
+dotnet publish .\src\SnipAgent.App\SnipAgent.App.csproj -c Release -r win-x64 --self-contained true -o .\Out\win-x64
 ```
 
 The solution can compile on non-Windows systems because Windows targeting is
@@ -73,10 +73,16 @@ enabled. Running the application or tests requires Windows and the
 5. Before delegating work to Copilot cloud agent, use the `cloud-execution`
    skill and follow `docs/CLOUD_EXECUTION.md`.
 6. Implement in small, independently verifiable vertical slices.
-7. Add or update focused tests for changed behavior.
-8. Run the smallest relevant tests while iterating, then run
+7. For every agent-authored feature or fix, increment the patch component of the
+   `<Version>` in `src/SnipAgent.App/SnipAgent.App.csproj` exactly once for the
+   complete change (for example, `0.1.0` to `0.1.1`). Do not increment the major
+   or minor component unless the user explicitly requests that version.
+   Documentation-only, test-only, and workflow-only changes do not require a
+   version increment unless they accompany a feature or fix.
+8. Add or update focused tests for changed behavior.
+9. Run the smallest relevant tests while iterating, then run
    `.\scripts\verify.ps1` before completion.
-9. Inspect the complete diff and reconcile affected documentation.
+10. Inspect the complete diff and reconcile affected documentation.
 
 Do not create permanent plan files for work that fits in one session. Do not use
 `docs/PLAN.md` as a live checklist. Do not rewrite accepted ADRs; supersede them
