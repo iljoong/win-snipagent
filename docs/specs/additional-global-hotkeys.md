@@ -1,6 +1,6 @@
 # Additional global hotkeys
 
-**Status:** Implementing
+**Status:** Done
 **Owner:** Repository owner
 **Last reviewed:** 2026-09-30
 
@@ -165,7 +165,7 @@ notification surface, and dispose all successful registrations on exit.
       [USER_MANUAL.md](../USER_MANUAL.md), and
       [USER_MANUAL_KR.md](../USER_MANUAL_KR.md).
 - [x] Increment the application patch version exactly once.
-- [ ] Run the repository verification script and complete manual Windows
+- [x] Run the repository verification script and complete manual Windows
       shortcut checks.
 
 ## Verification evidence
@@ -182,12 +182,21 @@ Warnings: 0.
 
 Errors: 0.
 
-This is compile-only evidence; Windows tests and interactive APIs were not run.
+This is compile-only evidence; Windows tests and interactive APIs were not run in
+this environment.
 
 ### Windows automated
 
-Pending. Focused Windows tests and the repository verification script remain to
-be run on Windows:
+Command: `.\scripts\verify.ps1`
+
+Environment: Windows, repository owner local validation at PR head
+`008ca33d10c9092530189b794659a6080663a352`, 2026-09-30.
+
+Result: Passed.
+
+Build: 0 warnings, 0 errors.
+
+Tests: 65 passed, 0 failed, 0 skipped, 65 total.
 
 ```powershell
 .\scripts\verify.ps1
@@ -195,22 +204,22 @@ be run on Windows:
 
 ### Manual Windows
 
-Pending:
+Result: Passed on 2026-09-30, as reported by the repository owner. Every listed
+manual scenario passed:
 
-- Verify Ctrl+Alt+A starts region selection and runs the selected AI Skill
-  without changing the saved AI Capture mode.
-- Verify Ctrl+Alt+C starts region selection and runs LLM text extraction
-  without changing the saved AI Capture mode.
-- Verify Ctrl+Alt+F starts the existing full-screen monitor flow.
-- Verify Ctrl+Alt+D starts a plain region-selection flow without OCR, LLM
-  extraction, or AI Skills, while leaving the configured AI Capture mode unchanged.
-- Verify the configurable hotkey still repeats the last-used capture mode.
-- Verify rapid shortcut presses do not start overlapping captures.
-- Verify a simulated registration conflict leaves the other shortcuts active
-  and produces a notification naming the unavailable combination.
-- Verify a reserved combination is rejected in Settings and from persisted
-  settings.
-- Verify exiting SnipAgent releases all registered shortcuts.
+- Ctrl+Alt+A starts region selection and runs the selected AI Skill without
+  changing the saved AI Capture mode.
+- Ctrl+Alt+C starts region selection and runs LLM text extraction without
+  changing the saved AI Capture mode.
+- Ctrl+Alt+F starts the existing full-screen monitor flow.
+- Ctrl+Alt+D starts a plain region-selection flow without OCR, LLM extraction,
+  or AI Skills, while leaving the configured AI Capture mode unchanged.
+- The configurable hotkey repeats the last-used capture mode.
+- Rapid shortcut presses do not start overlapping captures.
+- A registration conflict leaves the other shortcuts active and produces a
+  notification naming the unavailable combination.
+- Reserved combinations are rejected in Settings and from persisted settings.
+- Exiting SnipAgent releases all registered shortcuts.
 
 ## Related decisions
 
