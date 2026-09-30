@@ -1,6 +1,6 @@
 # Additional global hotkeys
 
-**Status:** Approved
+**Status:** Done
 **Owner:** Repository owner
 **Last reviewed:** 2026-09-30
 
@@ -19,7 +19,7 @@ dedicated global shortcut:
 - **Ctrl+Alt+A** starts a region capture using **Use AI Skills**.
 - **Ctrl+Alt+C** starts a region capture using **Extract text (Using LLM)**.
 - **Ctrl+Alt+F** starts a full-screen capture.
-- **Ctrl+Alt+D** starts a region capture.
+- **Ctrl+Alt+D** starts a plain region capture without text extraction or AI.
 
 The existing configurable global hotkey continues to repeat the last-used
 capture mode.
@@ -30,8 +30,10 @@ capture mode.
 - Route each shortcut to its specified capture type.
 - For Ctrl+Alt+A and Ctrl+Alt+C, override the configured AI Capture mode only
   for the capture started by that shortcut.
-- Preserve the configured AI Capture mode for Ctrl+Alt+F, Ctrl+Alt+D, tray-menu
-  captures, and the existing configurable hotkey.
+- Preserve the configured AI Capture mode for Ctrl+Alt+F, tray-menu captures, and
+  the existing configurable hotkey.
+- For Ctrl+Alt+D, temporarily use `None` for that capture only, without changing
+  or persisting the configured AI Capture mode.
 - Keep successfully registered dedicated shortcuts active if another dedicated
   shortcut cannot be registered.
 - Notify the user of every shortcut that could not be registered, identifying
@@ -52,7 +54,8 @@ capture mode.
   Skills.
 - Changing capture delay, target-selection overlays, save behavior, or the
   configured AI endpoint and selected AI Skill.
-- Persisting the temporary AI Capture mode selected by Ctrl+Alt+A or Ctrl+Alt+C.
+- Persisting any temporary AI Capture mode selected by Ctrl+Alt+A, Ctrl+Alt+C, or
+  Ctrl+Alt+D.
 - Replacing `RegisterHotKey` with a low-level keyboard hook.
 
 ## Acceptance scenarios
@@ -79,32 +82,39 @@ capture mode.
 
 5. **Given** SnipAgent is running and no capture is in progress
    **When** the user presses Ctrl+Alt+D
-   **Then** region selection starts using the configured AI Capture mode.
+   **Then** region selection starts and the completed capture is a plain
+   screenshot with `AiCaptureMode.None`, regardless of the configured AI Capture
+   mode.
 
-6. **Given** a capture is already in progress
+6. **Given** the configured AI Capture mode has any value
+   **When** a Ctrl+Alt+D capture completes or is canceled
+   **Then** the configured AI Capture mode remains unchanged and no OCR, LLM
+   extraction, or AI Skills flow runs for that capture.
+
+7. **Given** a capture is already in progress
    **When** the user presses any dedicated or configurable global shortcut
    **Then** no second capture workflow starts.
 
-7. **Given** one or more dedicated shortcuts are owned by Windows or another
+8. **Given** one or more dedicated shortcuts are owned by Windows or another
    application
    **When** SnipAgent starts
    **Then** every available dedicated shortcut remains functional and the user
    is notified which combinations could not be registered.
 
-8. **Given** the user enters Ctrl+Alt+A, Ctrl+Alt+C, Ctrl+Alt+F, or Ctrl+Alt+D
+9. **Given** the user enters Ctrl+Alt+A, Ctrl+Alt+C, Ctrl+Alt+F, or Ctrl+Alt+D
    in the configurable hotkey field
    **When** SnipAgent validates the combination
    **Then** the combination is rejected as reserved and settings are not changed
    to that combination.
 
-9. **Given** persisted settings already assign the configurable hotkey to one of
+10. **Given** persisted settings already assign the configurable hotkey to one of
    the four reserved combinations
    **When** SnipAgent starts
    **Then** all available dedicated shortcuts are registered, the conflicting
    configurable hotkey remains inactive, and the notification identifies the
    conflict.
 
-10. **Given** all five global shortcuts are available
+11. **Given** all five global shortcuts are available
     **When** SnipAgent starts and later exits
     **Then** it registers each shortcut with a distinct identifier and
     unregisters every registered shortcut during disposal.
@@ -141,32 +151,52 @@ notification surface, and dispose all successful registrations on exit.
 
 ## Tasks
 
-- [ ] Register, dispatch, and unregister the four dedicated global shortcuts
+- [x] Register, dispatch, and unregister the four dedicated global shortcuts
       independently.
-- [ ] Add region-capture entry points for one-capture AI mode overrides without
+- [x] Add region-capture entry points for one-capture AI mode overrides without
       mutating persisted settings.
-- [ ] Reserve the dedicated combinations in Settings and handle conflicting
+- [x] Reserve the dedicated combinations in Settings and handle conflicting
       persisted configurable hotkeys at startup.
-- [ ] Add focused tests for shortcut definitions, reservation checks, dispatch,
+- [x] Add focused tests for shortcut definitions, reservation checks, dispatch,
       registration results, and non-persistent AI mode overrides where logic can
       be isolated from Windows UI interop.
-- [ ] Update
+- [x] Update
       [FEATURES_AND_DEVELOPMENT.md](../FEATURES_AND_DEVELOPMENT.md),
       [USER_MANUAL.md](../USER_MANUAL.md), and
       [USER_MANUAL_KR.md](../USER_MANUAL_KR.md).
-- [ ] Increment the application patch version exactly once.
-- [ ] Run the repository verification script and complete manual Windows
+- [x] Increment the application patch version exactly once.
+- [x] Run the repository verification script and complete manual Windows
       shortcut checks.
 
 ## Verification evidence
 
 ### Cloud or Ubuntu
 
-Not run. Ubuntu compilation does not run the Windows-targeted tests.
+Command: `bash ./scripts/verify-ubuntu.sh`
+
+Environment: Ubuntu runner, .NET SDK 10.0.401.
+
+Result: Passed on 2026-09-30. The Windows-targeted solution compiled successfully.
+
+Warnings: 0.
+
+Errors: 0.
+
+This is compile-only evidence; Windows tests and interactive APIs were not run in
+this environment.
 
 ### Windows automated
 
-Not run. During implementation, run focused tests and then:
+Command: `.\scripts\verify.ps1`
+
+Environment: Windows, repository owner local validation at PR head
+`008ca33d10c9092530189b794659a6080663a352`, 2026-09-30.
+
+Result: Passed.
+
+Build: 0 warnings, 0 errors.
+
+Tests: 65 passed, 0 failed, 0 skipped, 65 total.
 
 ```powershell
 .\scripts\verify.ps1
@@ -174,21 +204,22 @@ Not run. During implementation, run focused tests and then:
 
 ### Manual Windows
 
-Pending:
+Result: Passed on 2026-09-30, as reported by the repository owner. Every listed
+manual scenario passed:
 
-- Verify Ctrl+Alt+A starts region selection and runs the selected AI Skill
-  without changing the saved AI Capture mode.
-- Verify Ctrl+Alt+C starts region selection and runs LLM text extraction
-  without changing the saved AI Capture mode.
-- Verify Ctrl+Alt+F starts the existing full-screen monitor flow.
-- Verify Ctrl+Alt+D starts the existing region-selection flow.
-- Verify the configurable hotkey still repeats the last-used capture mode.
-- Verify rapid shortcut presses do not start overlapping captures.
-- Verify a simulated registration conflict leaves the other shortcuts active
-  and produces a notification naming the unavailable combination.
-- Verify a reserved combination is rejected in Settings and from persisted
-  settings.
-- Verify exiting SnipAgent releases all registered shortcuts.
+- Ctrl+Alt+A starts region selection and runs the selected AI Skill without
+  changing the saved AI Capture mode.
+- Ctrl+Alt+C starts region selection and runs LLM text extraction without
+  changing the saved AI Capture mode.
+- Ctrl+Alt+F starts the existing full-screen monitor flow.
+- Ctrl+Alt+D starts a plain region-selection flow without OCR, LLM extraction,
+  or AI Skills, while leaving the configured AI Capture mode unchanged.
+- The configurable hotkey repeats the last-used capture mode.
+- Rapid shortcut presses do not start overlapping captures.
+- A registration conflict leaves the other shortcuts active and produces a
+  notification naming the unavailable combination.
+- Reserved combinations are rejected in Settings and from persisted settings.
+- Exiting SnipAgent releases all registered shortcuts.
 
 ## Related decisions
 

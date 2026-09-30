@@ -2,6 +2,7 @@ using System.Threading;
 using System.Windows;
 using SnipAgent.App.Core;
 using SnipAgent.App.Hotkeys;
+using SnipAgent.App.Models;
 using SnipAgent.App.Settings;
 using SnipAgent.App.TrayIcon;
 
@@ -52,15 +53,36 @@ public partial class App : System.Windows.Application
         _trayIconManager.SettingsRequested += (_, _) => OpenSettings();
         _trayIconManager.ExitRequested += (_, _) => Shutdown();
 
-        _hotkeyManager.HotkeyPressed += (_, _) => _captureController.CaptureLastUsedMode();
+        _hotkeyManager.HotkeyPressed += (_, args) =>
+        {
+            switch (args.Action)
+            {
+                case HotkeyAction.RegionAiSkills:
+                    _captureController.CaptureRegion(HotkeyActionRouting.GetRegionAiModeOverride(args.Action));
+                    break;
+                case HotkeyAction.RegionLlm:
+                    _captureController.CaptureRegion(HotkeyActionRouting.GetRegionAiModeOverride(args.Action));
+                    break;
+                case HotkeyAction.FullScreen:
+                    _captureController.CaptureFullScreen();
+                    break;
+                case HotkeyAction.Region:
+                    _captureController.CaptureRegion(HotkeyActionRouting.GetRegionAiModeOverride(args.Action));
+                    break;
+                default:
+                    _captureController.CaptureLastUsedMode();
+                    break;
+            }
+        };
 
         var initialSettings = _settingsService.Load();
-        if (!_hotkeyManager.TryRegister(initialSettings.Hotkey))
+        foreach (var (action, hotkey) in _hotkeyManager.RegisterAll(initialSettings.Hotkey))
         {
             _trayIconManager.ShowFailureNotification(
                 "Hotkey unavailable",
-                $"SnipAgent's hotkey ({initialSettings.Hotkey}) is already in use by another app. " +
-                "Open Settings to choose a different one; you can still capture from the tray menu.");
+                action == HotkeyAction.ConfiguredLastUsed
+                    ? $"SnipAgent's hotkey ({hotkey}) is reserved or already in use by another app."
+                    : $"The dedicated shortcut ({hotkey}) is already in use by another app.");
         }
 
         // Listen for a second-instance launch requesting Settings be shown.

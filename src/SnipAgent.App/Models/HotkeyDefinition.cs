@@ -8,6 +8,11 @@ namespace SnipAgent.App.Models;
 /// </summary>
 public sealed class HotkeyDefinition
 {
+    public const int CtrlAltA = 0x41;
+    public const int CtrlAltC = 0x43;
+    public const int CtrlAltF = 0x46;
+    public const int CtrlAltD = 0x44;
+
     /// <summary>Bitwise combination of MOD_ALT (1), MOD_CONTROL (2), MOD_SHIFT (4), MOD_WIN (8).</summary>
     public int Modifiers { get; set; }
 
@@ -22,6 +27,19 @@ public sealed class HotkeyDefinition
         Modifiers = ModifierFlags.Control | ModifierFlags.Alt,
         VirtualKey = 0x53 // 'S'
     };
+
+    public static IReadOnlyList<HotkeyDefinition> ReservedDedicatedHotkeys =>
+        new[]
+        {
+            new HotkeyDefinition { Modifiers = ModifierFlags.Control | ModifierFlags.Alt, VirtualKey = CtrlAltA },
+            new HotkeyDefinition { Modifiers = ModifierFlags.Control | ModifierFlags.Alt, VirtualKey = CtrlAltC },
+            new HotkeyDefinition { Modifiers = ModifierFlags.Control | ModifierFlags.Alt, VirtualKey = CtrlAltF },
+            new HotkeyDefinition { Modifiers = ModifierFlags.Control | ModifierFlags.Alt, VirtualKey = CtrlAltD },
+        };
+
+    public bool IsReservedDedicatedHotkey() =>
+        ReservedDedicatedHotkeys.Any(hotkey =>
+            hotkey.Modifiers == Modifiers && hotkey.VirtualKey == VirtualKey);
 
     public override string ToString()
     {

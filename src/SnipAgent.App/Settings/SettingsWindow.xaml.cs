@@ -318,6 +318,13 @@ public partial class SettingsWindow : Window
             VirtualKey = KeyInterop.VirtualKeyFromKey(key)
         };
 
+        if (candidate.IsReservedDedicatedHotkey())
+        {
+            HotkeyValidationText.Text =
+                "That combination is reserved for SnipAgent's dedicated capture shortcut.";
+            return;
+        }
+
         // Test-register on a throwaway probe window before accepting, so we can
         // reject combinations already reserved by Windows or another application
         // without disturbing the currently-active hotkey.
@@ -350,6 +357,12 @@ public partial class SettingsWindow : Window
             ? "Screenshot_{datetime}"
             : FilenamePatternTextBox.Text;
         _workingCopy.Hotkey = _pendingHotkey;
+        if (_workingCopy.Hotkey.IsReservedDedicatedHotkey())
+        {
+            HotkeyValidationText.Text =
+                "That combination is reserved for SnipAgent's dedicated capture shortcut.";
+            return;
+        }
         _workingCopy.CaptureDelaySeconds = AppSettings.NormalizeCaptureDelay(
             CaptureDelayComboBox.SelectedValue is int seconds ? seconds : 0);
         var selectedAiMode = ExtractMethodComboBox.SelectedItem as AiModeChoice;

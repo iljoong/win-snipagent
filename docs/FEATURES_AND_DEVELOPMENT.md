@@ -14,6 +14,13 @@ WPF. It runs in the system tray without a main window.
 - A global hotkey (default **Ctrl+Alt+S**, configurable in Settings) repeats the
   last region or full-screen capture mode. The previous region or monitor is
   shown so pressing **Enter** can recapture the same selection.
+- Dedicated global shortcuts are always available when not claimed by another
+  application: **Ctrl+Alt+A** starts region capture with Use AI Skills,
+  **Ctrl+Alt+C** starts region capture with LLM text extraction, **Ctrl+Alt+F**
+  starts full-screen capture, and **Ctrl+Alt+D** starts a plain region capture
+  without OCR or AI extraction. The A, C, and D selections apply only to that
+  capture and do not change settings. These four combinations are reserved from
+  the configurable hotkey.
 - An optional capture delay of 3, 5, or 10 seconds provides time to open a menu
   or display a tooltip before the desktop is frozen. It works with both capture
   modes and does not block the tray application.
