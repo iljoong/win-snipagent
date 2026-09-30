@@ -141,20 +141,20 @@ notification surface, and dispose all successful registrations on exit.
 
 ## Tasks
 
-- [ ] Register, dispatch, and unregister the four dedicated global shortcuts
+- [x] Register, dispatch, and unregister the four dedicated global shortcuts
       independently.
-- [ ] Add region-capture entry points for one-capture AI mode overrides without
+- [x] Add region-capture entry points for one-capture AI mode overrides without
       mutating persisted settings.
-- [ ] Reserve the dedicated combinations in Settings and handle conflicting
+- [x] Reserve the dedicated combinations in Settings and handle conflicting
       persisted configurable hotkeys at startup.
-- [ ] Add focused tests for shortcut definitions, reservation checks, dispatch,
+- [x] Add focused tests for shortcut definitions, reservation checks, dispatch,
       registration results, and non-persistent AI mode overrides where logic can
       be isolated from Windows UI interop.
-- [ ] Update
+- [x] Update
       [FEATURES_AND_DEVELOPMENT.md](../FEATURES_AND_DEVELOPMENT.md),
       [USER_MANUAL.md](../USER_MANUAL.md), and
       [USER_MANUAL_KR.md](../USER_MANUAL_KR.md).
-- [ ] Increment the application patch version exactly once.
+- [x] Increment the application patch version exactly once.
 - [ ] Run the repository verification script and complete manual Windows
       shortcut checks.
 
@@ -162,11 +162,22 @@ notification surface, and dispose all successful registrations on exit.
 
 ### Cloud or Ubuntu
 
-Not run. Ubuntu compilation does not run the Windows-targeted tests.
+Command: `bash ./scripts/verify-ubuntu.sh`
+
+Environment: Ubuntu runner, .NET SDK 10.0.401.
+
+Result: Passed. The Windows-targeted solution compiled successfully.
+
+Warnings: 0.
+
+Errors: 0.
+
+This is compile-only evidence; Windows tests and interactive APIs were not run.
 
 ### Windows automated
 
-Not run. During implementation, run focused tests and then:
+Pending. Focused Windows tests and the repository verification script remain to
+be run on Windows:
 
 ```powershell
 .\scripts\verify.ps1

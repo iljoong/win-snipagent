@@ -65,8 +65,8 @@ public sealed class HotkeyManager : IDisposable
             failures.Add((action, dedicatedHotkey));
         }
 
-        if (!hotkey.IsReservedDedicatedHotkey() && !TryRegisterCore(
-                ConfiguredHotkeyId, HotkeyAction.ConfiguredLastUsed, hotkey))
+        if (hotkey.IsReservedDedicatedHotkey() ||
+            !TryRegisterCore(ConfiguredHotkeyId, HotkeyAction.ConfiguredLastUsed, hotkey))
         {
             failures.Add((HotkeyAction.ConfiguredLastUsed, hotkey));
         }
@@ -145,19 +145,6 @@ public sealed class HotkeyManager : IDisposable
             handled = true;
         }
 
-        public enum HotkeyAction
-        {
-            ConfiguredLastUsed,
-            RegionAiSkills,
-            RegionLlm,
-            FullScreen,
-            Region
-        }
-
-        public sealed class HotkeyActionEventArgs(HotkeyAction action) : EventArgs
-        {
-            public HotkeyAction Action { get; } = action;
-        }
         return IntPtr.Zero;
     }
 
@@ -168,4 +155,19 @@ public sealed class HotkeyManager : IDisposable
         _hwndSource.Dispose();
         _messageWindow.Close();
     }
+
+}
+
+public enum HotkeyAction
+{
+    ConfiguredLastUsed,
+    RegionAiSkills,
+    RegionLlm,
+    FullScreen,
+    Region
+}
+
+public sealed class HotkeyActionEventArgs(HotkeyAction action) : EventArgs
+{
+    public HotkeyAction Action { get; } = action;
 }

@@ -357,6 +357,12 @@ public partial class SettingsWindow : Window
             ? "Screenshot_{datetime}"
             : FilenamePatternTextBox.Text;
         _workingCopy.Hotkey = _pendingHotkey;
+        if (_workingCopy.Hotkey.IsReservedDedicatedHotkey())
+        {
+            HotkeyValidationText.Text =
+                "That combination is reserved for SnipAgent's dedicated capture shortcut.";
+            return;
+        }
         _workingCopy.CaptureDelaySeconds = AppSettings.NormalizeCaptureDelay(
             CaptureDelayComboBox.SelectedValue is int seconds ? seconds : 0);
         var selectedAiMode = ExtractMethodComboBox.SelectedItem as AiModeChoice;
