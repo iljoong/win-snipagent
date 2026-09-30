@@ -160,7 +160,12 @@ public sealed class CaptureController
         string? aiAnswer = null;
         if (aiMode == AiCaptureMode.Answer)
         {
-            aiAnswer = RunAiAnswerFlow(bitmap, settings, bounds);
+            var result = RunAiAnswerFlow(bitmap, settings, bounds);
+            if (!result.ShouldContinueCapture)
+            {
+                return;
+            }
+            aiAnswer = result.Answer;
         }
 
         try
@@ -187,7 +192,7 @@ public sealed class CaptureController
     /// The capture is used as context for the AI call and the result is shown on screen
     /// until the user dismisses it (Enter/Esc).
     /// </summary>
-    private string? RunAiAnswerFlow(System.Drawing.Bitmap bitmap, AppSettings settings, System.Drawing.Rectangle bounds)
+    private AiAnswerOverlayResult RunAiAnswerFlow(System.Drawing.Bitmap bitmap, AppSettings settings, System.Drawing.Rectangle bounds)
     {
         try
         {
@@ -196,7 +201,7 @@ public sealed class CaptureController
         catch (Exception ex)
         {
             _trayIconManager.ShowFailureNotification("AI capture failed", ex.Message);
-            return null;
+            return new(AiAnswerOverlayStatus.Failed, null);
         }
     }
 
