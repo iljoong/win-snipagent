@@ -39,7 +39,7 @@ public sealed class CaptureController
         }
     }
 
-    public void CaptureRegion()
+    public void CaptureRegion(AiCaptureMode? aiModeOverride = null)
     {
         if (!BeginCapture())
         {
@@ -72,6 +72,7 @@ public sealed class CaptureController
 
             var settings = _settingsService.Load();
             ProcessCaptureResult(cropped, settings, CaptureMode.Region, selectedRegion,
+                aiModeOverride,
                 lastRegion: selectedRegion);
         }
         catch (Exception ex)
@@ -84,7 +85,7 @@ public sealed class CaptureController
         }
     }
 
-    public void CaptureFullScreen()
+    public void CaptureFullScreen(AiCaptureMode? aiModeOverride = null)
     {
         if (!BeginCapture())
         {
@@ -127,6 +128,7 @@ public sealed class CaptureController
 
             var settings = _settingsService.Load();
             ProcessCaptureResult(cropped, settings, CaptureMode.FullScreen, chosenMonitor.Bounds,
+                aiModeOverride,
                 lastMonitorDeviceName: chosenMonitor.DeviceName);
         }
         catch (Exception ex)
@@ -149,12 +151,14 @@ public sealed class CaptureController
     /// (or captured monitor's) physical-pixel bounds, used to center the answer overlay.
     /// </summary>
     private void ProcessCaptureResult(System.Drawing.Bitmap bitmap, AppSettings settings, CaptureMode mode,
-        System.Drawing.Rectangle bounds, System.Drawing.Rectangle? lastRegion = null, string? lastMonitorDeviceName = null)
+        System.Drawing.Rectangle bounds, AiCaptureMode? aiModeOverride = null,
+        System.Drawing.Rectangle? lastRegion = null, string? lastMonitorDeviceName = null)
     {
+        var aiMode = aiModeOverride ?? settings.AiCapture.Mode;
         // The AI answer overlay is the on-screen display for "Use AI to answer"; it runs
         // regardless of the saving option. Its answer is captured so it can also be saved.
         string? aiAnswer = null;
-        if (settings.AiCapture.Mode == AiCaptureMode.Answer)
+        if (aiMode == AiCaptureMode.Answer)
         {
             aiAnswer = RunAiAnswerFlow(bitmap, settings, bounds);
         }
@@ -164,7 +168,7 @@ public sealed class CaptureController
             // Run the (potentially slow) save/extraction on a background STA thread
             // while a "Saving…" spinner gives the user feedback, so they aren't left
             // wondering during a long OCR/AI save.
-            SavingProgressOverlayWindow.RunWhileSaving(() => SaveCapture(bitmap, settings, aiAnswer));
+            SavingProgressOverlayWindow.RunWhileSaving(() => SaveCapture(bitmap, settings, aiMode, aiAnswer));
         }
         catch (Exception ex)
         {
@@ -202,7 +206,7 @@ public sealed class CaptureController
     /// resulting text is written as a sidecar file (for file saves) and/or placed on the
     /// clipboard in place of the image.
     /// </summary>
-    private void SaveCapture(System.Drawing.Bitmap bitmap, AppSettings settings, string? aiAnswer)
+    private void SaveCapture(System.Drawing.Bitmap bitmap, AppSettings settings, AiCaptureMode aiMode, string? aiAnswer)
     {
         if (settings.Saving == SavingOption.Off)
         {
@@ -210,18 +214,18 @@ public sealed class CaptureController
         }
 
         // Extract once (if enabled) and reuse for both file and clipboard destinations.
-        string? extractedText = settings.AiCapture.Mode != AiCaptureMode.None
-            ? ExtractText(bitmap, settings, aiAnswer)
+        string? extractedText = aiMode != AiCaptureMode.None
+            ? ExtractText(bitmap, settings, aiMode, aiAnswer)
             : null;
 
         if (settings.Saving.SavesToFile())
         {
-            SaveToFile(bitmap, settings, extractedText);
+            SaveToFile(bitmap, settings, aiMode, extractedText);
         }
 
         if (settings.Saving.SavesToClipboard())
         {
-            SaveToClipboard(bitmap, settings, extractedText);
+            SaveToClipboard(bitmap, settings, aiMode, extractedText);
         }
     }
 
@@ -230,11 +234,11 @@ public sealed class CaptureController
     /// it combines the extracted formatted text with the AI's answer. Failures are
     /// reported but return null so the image can still be saved.
     /// </summary>
-    private string? ExtractText(System.Drawing.Bitmap bitmap, AppSettings settings, string? aiAnswer)
+    private string? ExtractText(System.Drawing.Bitmap bitmap, AppSettings settings, AiCaptureMode aiMode, string? aiAnswer)
     {
         try
         {
-            return settings.AiCapture.Mode switch
+            return aiMode switch
             {
                 AiCaptureMode.WindowsOcr => OcrService.ExtractText(bitmap),
                 AiCaptureMode.Capture => AiCaptureService.ExtractMarkdown(bitmap, settings),
@@ -281,7 +285,7 @@ public sealed class CaptureController
     /// Saves the capture image to disk and, when text was extracted, writes it as a
     /// sidecar file next to the image (.txt for Windows OCR, .md for the AI engines).
     /// </summary>
-    private void SaveToFile(System.Drawing.Bitmap bitmap, AppSettings settings, string? extractedText)
+    private void SaveToFile(System.Drawing.Bitmap bitmap, AppSettings settings, AiCaptureMode aiMode, string? extractedText)
     {
         var result = ImageSaveService.Save(bitmap, settings);
 
@@ -293,11 +297,11 @@ public sealed class CaptureController
                 $"Saved to {result.SavedFilePath} instead.");
         }
 
-        if (settings.AiCapture.Mode != AiCaptureMode.None && !string.IsNullOrEmpty(extractedText))
+        if (aiMode != AiCaptureMode.None && !string.IsNullOrEmpty(extractedText))
         {
             try
             {
-                var extension = settings.AiCapture.Mode == AiCaptureMode.WindowsOcr ? ".txt" : ".md";
+                var extension = aiMode == AiCaptureMode.WindowsOcr ? ".txt" : ".md";
                 var textFilePath = Path.ChangeExtension(result.SavedFilePath, extension);
                 File.WriteAllText(textFilePath, extractedText);
             }
@@ -312,11 +316,11 @@ public sealed class CaptureController
     /// Places the capture on the clipboard: the extracted text when text extraction is
     /// enabled, otherwise the image.
     /// </summary>
-    private void SaveToClipboard(System.Drawing.Bitmap bitmap, AppSettings settings, string? extractedText)
+    private void SaveToClipboard(System.Drawing.Bitmap bitmap, AppSettings settings, AiCaptureMode aiMode, string? extractedText)
     {
         try
         {
-            if (settings.AiCapture.Mode != AiCaptureMode.None)
+            if (aiMode != AiCaptureMode.None)
             {
                 if (string.IsNullOrEmpty(extractedText))
                 {

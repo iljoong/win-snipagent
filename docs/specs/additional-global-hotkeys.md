@@ -1,6 +1,6 @@
 # Additional global hotkeys
 
-**Status:** Approved
+**Status:** Implementing
 **Owner:** Repository owner
 **Last reviewed:** 2026-09-30
 

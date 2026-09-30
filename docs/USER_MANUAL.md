@@ -92,6 +92,14 @@ The screen is frozen at the moment the countdown ends.
 - It is a Windows global hotkey and works while you are using other applications.
 - Duplicate hotkey or capture requests are ignored while a capture is already in
   progress.
+- The following dedicated shortcuts start a specific workflow:
+  - **Ctrl + Alt + A**: region capture with **Use AI Skills**
+  - **Ctrl + Alt + C**: region capture with **Extract text (Using LLM)**
+  - **Ctrl + Alt + F**: full-screen capture using the configured AI mode
+  - **Ctrl + Alt + D**: region capture using the configured AI mode
+- The AI mode selected by the A or C shortcut applies only to that capture and
+  does not change the configured setting. The four dedicated combinations cannot
+  be assigned to the configurable hotkey.
 
 When you start a capture with the hotkey, the previously captured region or monitor
 is preselected. Press **Enter** to capture the same target again, or draw a new region

@@ -318,6 +318,13 @@ public partial class SettingsWindow : Window
             VirtualKey = KeyInterop.VirtualKeyFromKey(key)
         };
 
+        if (candidate.IsReservedDedicatedHotkey())
+        {
+            HotkeyValidationText.Text =
+                "That combination is reserved for SnipAgent's dedicated capture shortcut.";
+            return;
+        }
+
         // Test-register on a throwaway probe window before accepting, so we can
         // reject combinations already reserved by Windows or another application
         // without disturbing the currently-active hotkey.
