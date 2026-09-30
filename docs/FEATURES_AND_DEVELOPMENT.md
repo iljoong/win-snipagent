@@ -43,9 +43,11 @@ WPF. It runs in the system tray without a main window.
   - **Use AI capture** extracts captured content as formatted Markdown.
   - **Use AI to answer** opens an always-on-top answer overlay where the user
     selects an AI skill and presses **Enter** to run it against the capture. The
-    last selected skill is remembered. Press **Enter**, **Esc**, or the upper-right
-    close button to close the result; Esc and the close button also cancel a
-    running request. The overlay is centered over the captured area, can be moved
+    last selected skill is remembered. Press **Enter** after the answer to
+    continue saving or copying; **Esc** at any point discards the entire capture
+    and cancels a running request. The upper-right close button retains its
+    existing close-and-continue behavior (and cancels a running request).
+    The overlay is centered over the captured area, can be moved
     and resized from its edges or corners, and remembers its size. It also includes
     an opacity slider whose value is remembered in `settings.json`. Completed
     answers render as selectable dark-themed Markdown in native WPF, while

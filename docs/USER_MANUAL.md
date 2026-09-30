@@ -258,14 +258,16 @@ in the center of the selected region or monitor.
 1. Select the Skill to run from the **AI Skill** list at the top.
 2. Press **Enter** to run it.
 3. The overlay displays `Running...` while the request is in progress.
-4. When the answer appears, review it and press **Enter** or **Esc** to close the
-   overlay.
+4. When the answer appears, review it and press **Enter** to close the overlay
+   and continue with the configured saving option.
 
-- Press **Esc** before starting to close the overlay without sending a request.
-- Press **Esc** while a request is running to cancel the request and close the
-  overlay.
-- Select the close button in the upper-right corner to close the overlay. During a
-  request, the button cancels the request before closing, just like **Esc**.
+- Press **Esc** before starting, while a request is running, or after an answer
+  to cancel and discard the entire capture. No file is saved, the clipboard is
+  unchanged, and the last capture mode or selection is not updated. During a
+  request, **Esc** also cancels the request. Your selected AI mode and Skill remain.
+- Select the close button in the upper-right corner to close the overlay and
+  continue with the configured saving option. During a request, the button
+  cancels the request before closing; unlike **Esc**, it does not discard the capture.
 - The last Skill you ran is remembered and preselected the next time the overlay
   opens.
 - Drag the `AI answer` heading to move the overlay.

@@ -188,9 +188,9 @@ public sealed class CaptureController
 
     /// <summary>
     /// Shows the AI-generated answer overlay for "Use AI to answer" mode over
-    /// <paramref name="bounds"/> and returns the answer text so the caller can save it.
+    /// <paramref name="bounds"/> and returns the overlay outcome and answer.
     /// The capture is used as context for the AI call and the result is shown on screen
-    /// until the user dismisses it (Enter/Esc).
+    /// until the user completes it with Enter or cancels the capture with Esc.
     /// </summary>
     private AiAnswerOverlayResult RunAiAnswerFlow(System.Drawing.Bitmap bitmap, AppSettings settings, System.Drawing.Rectangle bounds)
     {

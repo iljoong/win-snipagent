@@ -37,9 +37,7 @@ public partial class AiAnswerOverlayWindow : Window
     private readonly AiAnswerMarkdownPresenter _markdownPresenter;
 
     /// <summary>
-    /// The answer produced by the AI call, captured so the caller can also save it
-    /// (per the saving option) after the overlay is dismissed. Null if the call failed
-    /// or the overlay was closed before the answer arrived.
+    /// The overlay outcome, including whether Escape discarded the capture.
     /// </summary>
     internal AiAnswerOverlayResult Result => _session.Result;
 
@@ -431,8 +429,8 @@ public partial class AiAnswerOverlayWindow : Window
     /// the result. <paramref name="targetBounds"/>
     /// is the selected region's (or captured monitor's) bounds in physical pixels,
     /// used to center the overlay over the relevant area of the screen. Returns the
-    /// AI answer text (or null if it failed / was dismissed early) so the caller can
-    /// save it alongside the extracted text.
+    /// outcome and answer so the caller can discard canceled captures or save the
+    /// answer alongside the extracted text.
     /// </summary>
     internal static AiAnswerOverlayResult ShowAnswer(Bitmap bitmap, AppSettings settings, SettingsService settingsService,
         System.Drawing.Rectangle targetBounds)
