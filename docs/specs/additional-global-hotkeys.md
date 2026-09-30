@@ -176,7 +176,7 @@ Command: `bash ./scripts/verify-ubuntu.sh`
 
 Environment: Ubuntu runner, .NET SDK 10.0.401.
 
-Result: Passed. The Windows-targeted solution compiled successfully.
+Result: Passed on 2026-09-30. The Windows-targeted solution compiled successfully.
 
 Warnings: 0.
 
