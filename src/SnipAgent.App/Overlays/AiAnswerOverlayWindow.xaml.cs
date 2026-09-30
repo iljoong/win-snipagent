@@ -22,13 +22,6 @@ public partial class AiAnswerOverlayWindow : Window
 {
     private const int WM_DPICHANGED = 0x02E0;
 
-    private enum OverlayState
-    {
-        Ready,
-        Running,
-        Finished
-    }
-
     private readonly Bitmap _bitmap;
     private readonly AppSettings _settings;
     private readonly SettingsService _settingsService;
@@ -38,17 +31,15 @@ public partial class AiAnswerOverlayWindow : Window
     private double _lastSavedHeight;
     private string? _lastSavedAiSkillsName;
     private CancellationTokenSource? _answerCancellation;
-    private OverlayState _state;
+    private readonly AiAnswerOverlaySession _session = new();
     private bool _isClosing;
     private bool _hasBeenPositionedByUser;
     private readonly AiAnswerMarkdownPresenter _markdownPresenter;
 
     /// <summary>
-    /// The answer produced by the AI call, captured so the caller can also save it
-    /// (per the saving option) after the overlay is dismissed. Null if the call failed
-    /// or the overlay was closed before the answer arrived.
+    /// The overlay outcome, including whether Escape discarded the capture.
     /// </summary>
-    public string? AnswerResult { get; private set; }
+    internal AiAnswerOverlayResult Result => _session.Result;
 
     private AiAnswerOverlayWindow(Bitmap bitmap, AppSettings settings, SettingsService settingsService,
         System.Drawing.Rectangle targetBounds)
@@ -296,13 +287,13 @@ public partial class AiAnswerOverlayWindow : Window
 
     private async Task StartSelectedSkillAsync()
     {
-        if (_state != OverlayState.Ready ||
+        if (_session.State != AiAnswerOverlayState.Ready ||
             AiSkillsComboBox.SelectedItem is not AiSkillsTemplate selectedSkills)
         {
             return;
         }
 
-        _state = OverlayState.Running;
+        _session.Start();
         AiSkillsComboBox.IsEnabled = false;
         InteractionHint.Text = "Running... Press Esc to cancel";
 
@@ -323,7 +314,7 @@ public partial class AiAnswerOverlayWindow : Window
                 return;
             }
 
-            AnswerResult = answer;
+            _session.Complete(answer);
             if (string.IsNullOrWhiteSpace(answer))
             {
                 ShowPlainTextMessage("(No answer returned.)");
@@ -357,7 +348,7 @@ public partial class AiAnswerOverlayWindow : Window
 
             if (!_isClosing)
             {
-                _state = OverlayState.Finished;
+                _session.Finish();
                 InteractionHint.Text = "Press Enter or Esc to close";
             }
         }
@@ -411,6 +402,7 @@ public partial class AiAnswerOverlayWindow : Window
         if (e.Key == Key.Escape)
         {
             e.Handled = true;
+            _session.Cancel(_answerCancellation);
             RequestClose();
             return;
         }
@@ -421,11 +413,11 @@ public partial class AiAnswerOverlayWindow : Window
         }
 
         e.Handled = true;
-        if (_state == OverlayState.Ready)
+        if (_session.State == AiAnswerOverlayState.Ready)
         {
             await StartSelectedSkillAsync();
         }
-        else if (_state == OverlayState.Finished)
+        else if (_session.State == AiAnswerOverlayState.Finished)
         {
             RequestClose();
         }
@@ -437,14 +429,14 @@ public partial class AiAnswerOverlayWindow : Window
     /// the result. <paramref name="targetBounds"/>
     /// is the selected region's (or captured monitor's) bounds in physical pixels,
     /// used to center the overlay over the relevant area of the screen. Returns the
-    /// AI answer text (or null if it failed / was dismissed early) so the caller can
-    /// save it alongside the extracted text.
+    /// outcome and answer so the caller can discard canceled captures or save the
+    /// answer alongside the extracted text.
     /// </summary>
-    public static string? ShowAnswer(Bitmap bitmap, AppSettings settings, SettingsService settingsService,
+    internal static AiAnswerOverlayResult ShowAnswer(Bitmap bitmap, AppSettings settings, SettingsService settingsService,
         System.Drawing.Rectangle targetBounds)
     {
         var overlay = new AiAnswerOverlayWindow(bitmap, settings, settingsService, targetBounds);
         overlay.ShowDialog();
-        return overlay.AnswerResult;
+        return overlay.Result;
     }
 }
