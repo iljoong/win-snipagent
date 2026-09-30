@@ -1,4 +1,5 @@
 using SnipAgent.App.Models;
+using SnipAgent.App.Hotkeys;
 using Xunit;
 
 namespace SnipAgent.Tests;
@@ -42,5 +43,23 @@ public class HotkeyDefinitionTests
 
         Assert.Equal(4, combinations.Count);
         Assert.Equal(4, combinations.Distinct().Count());
+    }
+
+    [Theory]
+    [InlineData(HotkeyAction.RegionAiSkills, AiCaptureMode.Answer)]
+    [InlineData(HotkeyAction.RegionLlm, AiCaptureMode.Capture)]
+    [InlineData(HotkeyAction.Region, AiCaptureMode.None)]
+    public void RegionDedicatedActions_UseExpectedTemporaryAiMode(
+        HotkeyAction action, AiCaptureMode expectedMode)
+    {
+        Assert.Equal(expectedMode, HotkeyActionRouting.GetRegionAiModeOverride(action));
+    }
+
+    [Theory]
+    [InlineData(HotkeyAction.ConfiguredLastUsed)]
+    [InlineData(HotkeyAction.FullScreen)]
+    public void NormalAndFullScreenActions_DoNotOverrideConfiguredAiMode(HotkeyAction action)
+    {
+        Assert.Null(HotkeyActionRouting.GetRegionAiModeOverride(action));
     }
 }

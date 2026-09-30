@@ -58,16 +58,16 @@ public partial class App : System.Windows.Application
             switch (args.Action)
             {
                 case HotkeyAction.RegionAiSkills:
-                    _captureController.CaptureRegion(AiCaptureMode.Answer);
+                    _captureController.CaptureRegion(HotkeyActionRouting.GetRegionAiModeOverride(args.Action));
                     break;
                 case HotkeyAction.RegionLlm:
-                    _captureController.CaptureRegion(AiCaptureMode.Capture);
+                    _captureController.CaptureRegion(HotkeyActionRouting.GetRegionAiModeOverride(args.Action));
                     break;
                 case HotkeyAction.FullScreen:
                     _captureController.CaptureFullScreen();
                     break;
                 case HotkeyAction.Region:
-                    _captureController.CaptureRegion();
+                    _captureController.CaptureRegion(HotkeyActionRouting.GetRegionAiModeOverride(args.Action));
                     break;
                 default:
                     _captureController.CaptureLastUsedMode();

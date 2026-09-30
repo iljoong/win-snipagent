@@ -171,3 +171,15 @@ public sealed class HotkeyActionEventArgs(HotkeyAction action) : EventArgs
 {
     public HotkeyAction Action { get; } = action;
 }
+
+public static class HotkeyActionRouting
+{
+    public static AiCaptureMode? GetRegionAiModeOverride(HotkeyAction action) =>
+        action switch
+        {
+            HotkeyAction.RegionAiSkills => AiCaptureMode.Answer,
+            HotkeyAction.RegionLlm => AiCaptureMode.Capture,
+            HotkeyAction.Region => AiCaptureMode.None,
+            _ => null
+        };
+}
