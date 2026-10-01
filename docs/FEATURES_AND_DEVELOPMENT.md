@@ -151,6 +151,10 @@ builds the solution and executes the full automated test suite:
 .\scripts\verify.ps1
 ```
 
+The `CI` GitHub Actions workflow runs this same command on `windows-latest` for
+every pull request and push to `main`, and can also be started manually. This is
+the authoritative automated CI gate for the Windows-targeted solution.
+
 On Ubuntu, including the default Copilot cloud-agent environment, run the
 compile-only gate:
 
@@ -159,7 +163,8 @@ bash ./scripts/verify-ubuntu.sh
 ```
 
 It restores and builds the Windows-targeted solution with isolated artifacts,
-but it does not run tests and does not replace Windows verification.
+but it does not run tests and does not replace the Windows CI workflow, local
+Windows verification, or required manual checks.
 
 The tests cover pure logic without invoking UI or platform interoperability:
 

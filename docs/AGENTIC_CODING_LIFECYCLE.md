@@ -346,7 +346,8 @@ Require it to:
 - add or update focused tests;
 - run bash ./scripts/verify-ubuntu.sh;
 - label all evidence with the environment where it was collected;
-- leave Windows tests and interactive checks pending;
+- record the `CI / Windows build and test` result when it completes;
+- leave focused local Windows tests and interactive checks pending;
 - keep the specification Implementing until all required evidence is supplied.
 
 Do not allow direct pushes to main, self-approval, merge, or claims of
@@ -370,11 +371,17 @@ Ubuntu is a compile-only environment for this Windows application. The command
 run its Windows-targeted tests or validate WPF, WinForms, WinRT, Win32, DPI,
 capture, clipboard, or interactive behavior.
 
+Every pull request also runs `.\scripts\verify.ps1` in the
+`CI / Windows build and test` check on `windows-latest`. Treat that check as the
+required independent Windows automated gate, but not as evidence for focused or
+interactive scenarios.
+
 ## Review and completion
 
-Review the draft PR, then run focused tests and `.\scripts\verify.ps1` on
-Windows. Perform every required interactive scenario. Send defects back to the
-same cloud session while it owns the branch.
+Review the draft PR and confirm its Windows CI check passed, then run focused
+tests and any required final `.\scripts\verify.ps1` validation on Windows.
+Perform every required interactive scenario. Send defects back to the same
+cloud session while it owns the branch.
 
 The final PR revision may change the specification to `Done` only after all
 cloud, Windows automated, and manual evidence is recorded. That status becomes

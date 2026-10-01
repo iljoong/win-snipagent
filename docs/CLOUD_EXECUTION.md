@@ -17,7 +17,7 @@ Cloud-owned task branch and draft PR
         ↓
 Cloud review iterations and Ubuntu compilation
         ↓
-Local Windows automated and manual validation
+Windows CI plus local focused and manual validation
         ↓
 Final evidence and Done status in the PR
         ↓
@@ -75,7 +75,8 @@ Execution rules:
 - You may commit and push only to the task branch.
 - Run bash ./scripts/verify-ubuntu.sh and record exact results as Ubuntu
   compile-only evidence.
-- Leave Windows tests and interactive checks pending.
+- Record the Windows `CI / Windows build and test` check when it completes.
+- Leave focused local Windows tests and interactive checks pending.
 - Keep the specification Implementing until all required evidence exists.
 - Do not push to main, approve, merge, or claim unperformed validation.
 
@@ -112,6 +113,12 @@ compile from Ubuntu. Ubuntu does not provide `Microsoft.WindowsDesktop.App` and
 cannot validate WPF, WinForms, WinRT, Win32, capture, clipboard, tray, DPI,
 multi-monitor, or other interactive Windows behavior.
 
+Every pull request also starts the `CI` workflow on `windows-latest`. Its
+`Windows build and test` job runs `.\scripts\verify.ps1`, providing an
+independent Windows build and full automated-test result. This required
+automated gate does not replace focused tests or interactive Windows validation
+for the changed behavior.
+
 Do not add success-shaped fallbacks when Ubuntu compilation fails. Record and
 fix the failure or identify it as a blocker.
 
@@ -129,6 +136,7 @@ Use the repository pull-request template and divide evidence into:
 
 ### Windows automated
 
+- `CI / Windows build and test` check and result
 - focused `dotnet test` commands
 - final `.\scripts\verify.ps1`
 - test counts, failures, warnings, and errors
@@ -160,10 +168,11 @@ On a Windows machine:
 
 1. Check out the reviewed cloud branch without overwriting unrelated local
    changes.
-2. Run focused tests for the changed behavior.
-3. Run `.\scripts\verify.ps1`.
-4. Perform the manual scenarios required by the specification.
-5. Record exact results in the specification and PR.
+2. Confirm that `CI / Windows build and test` passed at the reviewed PR head.
+3. Run focused tests for the changed behavior.
+4. Run `.\scripts\verify.ps1` when local final verification is required.
+5. Perform the manual scenarios required by the specification.
+6. Record exact results in the specification and PR.
 
 Only after all acceptance scenarios, documentation, ADR requirements, automated
 checks, and manual validation are complete may the final PR revision change the
@@ -176,7 +185,8 @@ own work.
 
 - If setup or Ubuntu compilation fails, keep the work in progress and record
   the exact failure.
-- If Windows validation fails, return the defect to the current branch owner.
+- If Windows CI or local validation fails, return the defect to the current
+  branch owner.
 - If scope changes materially, pause implementation and revise or reapprove the
   specification first.
 - If work is canceled, close the cloud session or PR and reconcile the
