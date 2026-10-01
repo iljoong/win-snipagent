@@ -39,6 +39,8 @@ public sealed class AppSettings
     /// <summary>The user-configurable global hotkey. Defaults to Ctrl+Alt+S.</summary>
     public HotkeyDefinition Hotkey { get; set; } = HotkeyDefinition.Default;
 
+    public DedicatedHotkeySettings DedicatedHotkeys { get; set; } = new();
+
     /// <summary>
     /// Countdown, in seconds, between confirming the region/monitor and taking the
     /// actual screenshot. Lets the user set up a transient UI state (open a menu,

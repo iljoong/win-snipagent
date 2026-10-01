@@ -58,16 +58,16 @@ public partial class App : System.Windows.Application
             switch (args.Action)
             {
                 case HotkeyAction.RegionAiSkills:
-                    _captureController.CaptureRegion(HotkeyActionRouting.GetRegionAiModeOverride(args.Action));
+                    _captureController.CaptureRegion(HotkeyActionRouting.GetAiModeOverride(args.Action));
                     break;
                 case HotkeyAction.RegionLlm:
-                    _captureController.CaptureRegion(HotkeyActionRouting.GetRegionAiModeOverride(args.Action));
+                    _captureController.CaptureRegion(HotkeyActionRouting.GetAiModeOverride(args.Action));
                     break;
                 case HotkeyAction.FullScreen:
-                    _captureController.CaptureFullScreen();
+                    _captureController.CaptureFullScreen(HotkeyActionRouting.GetAiModeOverride(args.Action));
                     break;
                 case HotkeyAction.Region:
-                    _captureController.CaptureRegion(HotkeyActionRouting.GetRegionAiModeOverride(args.Action));
+                    _captureController.CaptureRegion(HotkeyActionRouting.GetAiModeOverride(args.Action));
                     break;
                 default:
                     _captureController.CaptureLastUsedMode();
@@ -76,13 +76,11 @@ public partial class App : System.Windows.Application
         };
 
         var initialSettings = _settingsService.Load();
-        foreach (var (action, hotkey) in _hotkeyManager.RegisterAll(initialSettings.Hotkey))
+        foreach (var failure in _hotkeyManager.RegisterAll(initialSettings))
         {
             _trayIconManager.ShowFailureNotification(
                 "Hotkey unavailable",
-                action == HotkeyAction.ConfiguredLastUsed
-                    ? $"SnipAgent's hotkey ({hotkey}) is reserved or already in use by another app."
-                    : $"The dedicated shortcut ({hotkey}) is already in use by another app.");
+                failure.ToString());
         }
 
         // Listen for a second-instance launch requesting Settings be shown.

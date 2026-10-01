@@ -1,7 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Interop;
 using SnipAgent.App.Capture;
 using SnipAgent.App.Hotkeys;
 using SnipAgent.App.Models;
@@ -13,16 +12,16 @@ namespace SnipAgent.App.Settings;
 
 /// <summary>
 /// Settings window: save folder, filename pattern (with live preview), global
-/// hotkey remapping, and AI capture configuration. Hotkey changes are
-/// test-registered before saving so we never silently accept a combination
-/// Windows or another app already owns.
+/// hotkey remapping, and AI capture configuration. Shortcut changes are validated
+/// and registered as a complete set on Save.
 /// </summary>
 public partial class SettingsWindow : Window
 {
     private readonly SettingsService _settingsService;
     private readonly HotkeyManager _hotkeyManager;
     private AppSettings _workingCopy;
-    private HotkeyDefinition _pendingHotkey;
+    private readonly Dictionary<HotkeyAction, HotkeyDefinition> _pendingHotkeys;
+    private readonly Dictionary<HotkeyAction, (TextBox Field, TextBlock Validation)> _hotkeyFields;
 
     /// <summary>
     /// Working list of AI Skills templates, kept in sync with <see cref="AiSkillsComboBox"/>.
@@ -37,11 +36,25 @@ public partial class SettingsWindow : Window
         _settingsService = settingsService;
         _hotkeyManager = hotkeyManager;
         _workingCopy = _settingsService.Load();
-        _pendingHotkey = _workingCopy.Hotkey;
+        _pendingHotkeys = HotkeyBindings.FromSettings(_workingCopy)
+            .ToDictionary(binding => binding.Action, binding => binding.Hotkey);
+        _hotkeyFields = new()
+        {
+            [HotkeyAction.ConfiguredLastUsed] = (HotkeyTextBox, HotkeyValidationText),
+            [HotkeyAction.RegionAiSkills] = (AiSkillsHotkeyTextBox, AiSkillsHotkeyValidationText),
+            [HotkeyAction.RegionLlm] = (ExtractTextHotkeyTextBox, ExtractTextHotkeyValidationText),
+            [HotkeyAction.FullScreen] = (FullScreenHotkeyTextBox, FullScreenHotkeyValidationText),
+            [HotkeyAction.Region] = (RegionHotkeyTextBox, RegionHotkeyValidationText)
+        };
+        foreach (var (action, controls) in _hotkeyFields)
+        {
+            controls.Field.Text = _pendingHotkeys[action].ToString();
+        }
+        _hotkeyManager.PreviewHotkeyPressed += OnRegisteredHotkeyPressed;
+        Closed += (_, _) => _hotkeyManager.PreviewHotkeyPressed -= OnRegisteredHotkeyPressed;
 
         SaveFolderTextBox.Text = _workingCopy.SaveFolder;
         FilenamePatternTextBox.Text = _workingCopy.FilenamePattern;
-        HotkeyTextBox.Text = _pendingHotkey.ToString();
         PopulateCaptureDelayChoices();
         PopulateSavingOptionChoices();
         PopulateAiCaptureSection();
@@ -288,8 +301,16 @@ public partial class SettingsWindow : Window
     private void OnHotkeyPreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         e.Handled = true;
+        var action = _hotkeyFields.First(pair => ReferenceEquals(pair.Value.Field, sender)).Key;
 
         var key = e.Key == Key.System ? e.SystemKey : e.Key;
+
+        if (key == Key.Tab && Keyboard.Modifiers is
+            System.Windows.Input.ModifierKeys.None or System.Windows.Input.ModifierKeys.Shift)
+        {
+            e.Handled = false;
+            return;
+        }
 
         // Require at least one modifier so the hotkey doesn't hijack a plain key
         // used everywhere else in Windows.
@@ -308,7 +329,7 @@ public partial class SettingsWindow : Window
 
         if (modifierFlags == 0)
         {
-            HotkeyValidationText.Text = "Choose a combination that includes Ctrl, Alt, Shift, or Win.";
+            _hotkeyFields[action].Validation.Text = "Choose a combination that includes Ctrl, Alt, Shift, or Win.";
             return;
         }
 
@@ -318,51 +339,77 @@ public partial class SettingsWindow : Window
             VirtualKey = KeyInterop.VirtualKeyFromKey(key)
         };
 
-        if (candidate.IsReservedDedicatedHotkey())
+        if (!candidate.IsValid())
         {
-            HotkeyValidationText.Text =
-                "That combination is reserved for SnipAgent's dedicated capture shortcut.";
+            _hotkeyFields[action].Validation.Text = "Choose a modifier and a valid non-modifier key.";
             return;
         }
 
-        // Test-register on a throwaway probe window before accepting, so we can
-        // reject combinations already reserved by Windows or another application
-        // without disturbing the currently-active hotkey.
-        var probeWindow = new Window { Width = 0, Height = 0, WindowStyle = WindowStyle.None, ShowInTaskbar = false, Visibility = Visibility.Hidden };
-        probeWindow.Show();
-        probeWindow.Hide();
-        var probeSource = (HwndSource)PresentationSource.FromVisual(probeWindow)!;
+        SetPendingHotkey(action, candidate);
+    }
 
-        bool canRegister = HotkeyManager.CanRegister(probeSource, candidate);
-        probeSource.Dispose();
-        probeWindow.Close();
-
-        if (!canRegister)
+    private void OnRegisteredHotkeyPressed(object? sender, HotkeyActionEventArgs e)
+    {
+        foreach (var (action, controls) in _hotkeyFields)
         {
-            HotkeyValidationText.Text = "That combination is already in use by Windows or another app. Try a different one.";
-            return;
+            if (controls.Field.IsKeyboardFocused)
+            {
+                // Windows may deliver WM_HOTKEY instead of a key-down for our own
+                // active combination. Record it without starting a capture.
+                e.Handled = true;
+                SetPendingHotkey(action, e.Hotkey.Clone());
+                return;
+            }
+        }
+    }
+
+    private void SetPendingHotkey(HotkeyAction action, HotkeyDefinition candidate)
+    {
+        _pendingHotkeys[action] = candidate;
+        _hotkeyFields[action].Field.Text = candidate.ToString();
+        HotkeySaveErrorText.Text = string.Empty;
+        ValidatePendingHotkeys();
+    }
+
+    private IReadOnlyList<HotkeyFailure> ValidatePendingHotkeys()
+    {
+        foreach (var controls in _hotkeyFields.Values)
+        {
+            controls.Validation.Text = string.Empty;
         }
 
-        HotkeyValidationText.Text = string.Empty;
-        _pendingHotkey = candidate;
-        HotkeyTextBox.Text = candidate.ToString();
+        var bindings = _pendingHotkeys.Select(pair => new HotkeyBinding(pair.Key, pair.Value)).ToArray();
+        var failures = HotkeyBindings.Validate(bindings);
+        foreach (var failure in failures)
+        {
+            _hotkeyFields[failure.Binding.Action].Validation.Text = failure.Reason;
+        }
+        return failures;
     }
 
     private void OnSaveClick(object sender, RoutedEventArgs e)
     {
+        var failures = ValidatePendingHotkeys();
+        if (failures.Count > 0)
+        {
+            HotkeySaveErrorText.Text = string.Join(Environment.NewLine, failures);
+            return;
+        }
+
         _workingCopy.SaveFolder = string.IsNullOrWhiteSpace(SaveFolderTextBox.Text)
             ? AppSettings.DefaultSaveFolder
             : SaveFolderTextBox.Text;
         _workingCopy.FilenamePattern = string.IsNullOrWhiteSpace(FilenamePatternTextBox.Text)
             ? "Screenshot_{datetime}"
             : FilenamePatternTextBox.Text;
-        _workingCopy.Hotkey = _pendingHotkey;
-        if (_workingCopy.Hotkey.IsReservedDedicatedHotkey())
+        _workingCopy.Hotkey = _pendingHotkeys[HotkeyAction.ConfiguredLastUsed].Clone();
+        _workingCopy.DedicatedHotkeys = new DedicatedHotkeySettings
         {
-            HotkeyValidationText.Text =
-                "That combination is reserved for SnipAgent's dedicated capture shortcut.";
-            return;
-        }
+            AiSkills = _pendingHotkeys[HotkeyAction.RegionAiSkills].Clone(),
+            ExtractText = _pendingHotkeys[HotkeyAction.RegionLlm].Clone(),
+            FullScreen = _pendingHotkeys[HotkeyAction.FullScreen].Clone(),
+            Region = _pendingHotkeys[HotkeyAction.Region].Clone()
+        };
         _workingCopy.CaptureDelaySeconds = AppSettings.NormalizeCaptureDelay(
             CaptureDelayComboBox.SelectedValue is int seconds ? seconds : 0);
         var selectedAiMode = ExtractMethodComboBox.SelectedItem as AiModeChoice;
@@ -395,12 +442,10 @@ public partial class SettingsWindow : Window
             }
         }
 
-        _settingsService.Save(_workingCopy);
-
-        // Re-register the live hotkey with the newly-saved combination.
-        if (!_hotkeyManager.TryRegister(_workingCopy.Hotkey))
+        var result = _hotkeyManager.TryApply(_workingCopy, () => _settingsService.Save(_workingCopy));
+        if (!result.Success)
         {
-            HotkeyValidationText.Text = "Saved, but the hotkey could not be re-registered. It may have just been claimed by another app.";
+            HotkeySaveErrorText.Text = string.Join(Environment.NewLine, result.Errors);
             return;
         }
 

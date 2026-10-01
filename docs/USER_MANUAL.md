@@ -92,14 +92,16 @@ The screen is frozen at the moment the countdown ends.
 - It is a Windows global hotkey and works while you are using other applications.
 - Duplicate hotkey or capture requests are ignored while a capture is already in
   progress.
-- The following dedicated shortcuts start a specific workflow:
+- The following dedicated shortcuts start a specific workflow by default:
   - **Ctrl + Alt + A**: region capture with **Use AI Skills**
   - **Ctrl + Alt + C**: region capture with **Extract text (Using LLM)**
-  - **Ctrl + Alt + F**: full-screen capture using the configured AI mode
+  - **Ctrl + Alt + F**: full-screen capture without OCR or AI extraction
   - **Ctrl + Alt + D**: plain region capture without OCR or AI extraction
-- The AI mode selected by the A, C, or D shortcut applies only to that capture
-  and does not change the configured setting. The four dedicated combinations
-  cannot be assigned to the configurable hotkey.
+- Dedicated shortcuts apply their AI mode only to that capture and do not change
+  the configured setting. The main hotkey and tray captures still use the
+  configured mode. Change dedicated shortcuts under **Advanced Options >
+  Custom Hotkey**; a default combination can be reused once its action is moved
+  to another combination.
 
 When you start a capture with the hotkey, the previously captured region or monitor
 is preselected. Press **Enter** to capture the same target again, or draw a new region
@@ -152,6 +154,7 @@ same value as `{datetime}`. Unknown tokens are left unchanged.
 - The combination must include at least one of **Ctrl, Alt, Shift, or Win**.
 - A combination already used by Windows or another application cannot be registered.
 - Selecting **Save** immediately registers the new hotkey.
+- The assignment must differ from the four **Custom Hotkey** assignments.
 
 #### Capture delay
 
@@ -247,6 +250,40 @@ Configure the following fields before using LLM-based extraction or AI Skills:
 The API key is stored securely in **Windows Credential Manager**, not in the
 plain-text `settings.json` file. If a key is already saved, leave the API Key field
 blank to keep it. Entering a new value replaces the existing key.
+
+### 6.5 Advanced Options > Custom Hotkey
+
+Each bold option name has a short description beside it, above the input field.
+**Image only** means no text extraction or AI. Validation errors appear below
+the input, separately from the description.
+
+| Option | Default | Action |
+|--------|---------|--------|
+| **AI Skills** | Ctrl+Alt+A | Region capture using AI Skills |
+| **Extract Text** | Ctrl+Alt+C | Region capture with LLM text extraction |
+| **Full Screen** | Ctrl+Alt+F | Monitor capture without text extraction or AI |
+| **Region** | Ctrl+Alt+D | Region capture without text extraction or AI |
+
+- Click a field and press a combination containing **Ctrl, Alt, Shift, or Win**
+  and a non-modifier key. Shortcuts cannot be cleared or disabled.
+- **Tab** and **Shift+Tab** move between fields instead of assigning a shortcut.
+- All five assignments, including the main Global hotkey, must be different.
+  You can swap assignments before Save or reuse a freed default combination.
+- Editing does not change active shortcuts. Pressing an existing SnipAgent
+  shortcut in a focused hotkey field records it instead of starting a capture.
+- **Save** checks Windows availability and applies the complete set immediately.
+  Assignments are remembered after restart. **Cancel** or closing without Save
+  discards edits.
+- If a combination is unavailable or settings cannot be saved, Settings stays
+  open and reports the error. The previous settings are retained and previous
+  shortcuts are restored. If Windows prevents restoring one, the error names
+  the now-inactive shortcut.
+- At startup, unavailable, invalid, or duplicate assignments produce a
+  notification naming the action and combination; other available shortcuts
+  continue working. Change the conflicting assignment here or in Global hotkey.
+- AI Skills opens the existing skill-selection workflow, not a shortcut for
+  each individual Skill. Neither dedicated capture-only action uses the
+  configured AI mode.
 
 ---
 

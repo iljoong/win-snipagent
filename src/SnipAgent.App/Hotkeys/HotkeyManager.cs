@@ -13,20 +13,12 @@ namespace SnipAgent.App.Hotkeys;
 /// </summary>
 public sealed class HotkeyManager : IDisposable
 {
-    private const int ConfiguredHotkeyId = 0xCA92;
-    private static readonly (int Id, HotkeyAction Action, HotkeyDefinition Hotkey)[] DedicatedHotkeys =
-    {
-        (0xCA94, HotkeyAction.RegionAiSkills, new() { Modifiers = ModifierFlags.Control | ModifierFlags.Alt, VirtualKey = HotkeyDefinition.CtrlAltA }),
-        (0xCA95, HotkeyAction.RegionLlm, new() { Modifiers = ModifierFlags.Control | ModifierFlags.Alt, VirtualKey = HotkeyDefinition.CtrlAltC }),
-        (0xCA96, HotkeyAction.FullScreen, new() { Modifiers = ModifierFlags.Control | ModifierFlags.Alt, VirtualKey = HotkeyDefinition.CtrlAltF }),
-        (0xCA97, HotkeyAction.Region, new() { Modifiers = ModifierFlags.Control | ModifierFlags.Alt, VirtualKey = HotkeyDefinition.CtrlAltD }),
-    };
-
     private readonly Window _messageWindow;
     private readonly HwndSource _hwndSource;
-    private readonly Dictionary<int, HotkeyAction> _registeredHotkeys = new();
+    private readonly HotkeyRegistrationSet _registrations;
 
     public event EventHandler<HotkeyActionEventArgs>? HotkeyPressed;
+    public event EventHandler<HotkeyActionEventArgs>? PreviewHotkeyPressed;
 
     public HotkeyManager()
     {
@@ -46,102 +38,28 @@ public sealed class HotkeyManager : IDisposable
 
         _hwndSource = (HwndSource)PresentationSource.FromVisual(_messageWindow)!;
         _hwndSource.AddHook(WndProc);
+        _registrations = new HotkeyRegistrationSet(
+            (id, hotkey) => NativeMethods.RegisterHotKey(_hwndSource.Handle, id, hotkey.Modifiers, hotkey.VirtualKey),
+            id => NativeMethods.UnregisterHotKey(_hwndSource.Handle, id));
     }
 
-    /// <summary>
-    /// Registers the fixed shortcuts and the configured repeat-last shortcut
-    /// independently. Returns the dedicated combinations that could not be registered.
-    /// </summary>
-    public IReadOnlyList<(HotkeyAction Action, HotkeyDefinition Hotkey)> RegisterAll(HotkeyDefinition hotkey)
-    {
-        var failures = new List<(HotkeyAction, HotkeyDefinition)>();
-        foreach (var (id, action, dedicatedHotkey) in DedicatedHotkeys)
-        {
-            if (TryRegisterCore(id, action, dedicatedHotkey))
-            {
-                continue;
-            }
+    public IReadOnlyList<HotkeyFailure> RegisterAll(AppSettings settings) =>
+        _registrations.RegisterAll(HotkeyBindings.FromSettings(settings));
 
-            failures.Add((action, dedicatedHotkey));
-        }
-
-        if (hotkey.IsReservedDedicatedHotkey() ||
-            !TryRegisterCore(ConfiguredHotkeyId, HotkeyAction.ConfiguredLastUsed, hotkey))
-        {
-            failures.Add((HotkeyAction.ConfiguredLastUsed, hotkey));
-        }
-
-        return failures;
-    }
-
-    public bool TryRegister(HotkeyDefinition hotkey)
-    {
-        UnregisterConfigured();
-        return !hotkey.IsReservedDedicatedHotkey() &&
-            TryRegisterCore(ConfiguredHotkeyId, HotkeyAction.ConfiguredLastUsed, hotkey);
-    }
-
-    /// <summary>
-    /// Validates that a hotkey combination can be registered right now, without
-    /// leaving it registered. Used by the Settings UI to test a candidate hotkey
-    /// before saving, so we never silently keep an old, working hotkey registered
-    /// while telling the user their new one was accepted.
-    /// </summary>
-    public static bool CanRegister(HwndSource probeWindowSource, HotkeyDefinition hotkey)
-    {
-        const int probeId = 0xCA93;
-        if (hotkey.IsReservedDedicatedHotkey())
-        {
-            return false;
-        }
-        var ok = NativeMethods.RegisterHotKey(probeWindowSource.Handle, probeId, hotkey.Modifiers, hotkey.VirtualKey);
-        if (ok)
-        {
-            NativeMethods.UnregisterHotKey(probeWindowSource.Handle, probeId);
-        }
-        return ok;
-    }
-
-    public void Unregister()
-    {
-        foreach (var id in _registeredHotkeys.Keys.ToArray())
-        {
-            NativeMethods.UnregisterHotKey(_hwndSource.Handle, id);
-        }
-        _registeredHotkeys.Clear();
-    }
-
-    private void UnregisterConfigured()
-    {
-        if (_registeredHotkeys.Remove(ConfiguredHotkeyId))
-        {
-            NativeMethods.UnregisterHotKey(_hwndSource.Handle, ConfiguredHotkeyId);
-        }
-    }
-
-    private bool TryRegisterCore(int id, HotkeyAction action, HotkeyDefinition hotkey)
-    {
-        if (_registeredHotkeys.ContainsKey(id))
-        {
-            NativeMethods.UnregisterHotKey(_hwndSource.Handle, id);
-            _registeredHotkeys.Remove(id);
-        }
-
-        if (!NativeMethods.RegisterHotKey(_hwndSource.Handle, id, hotkey.Modifiers, hotkey.VirtualKey))
-        {
-            return false;
-        }
-
-        _registeredHotkeys[id] = action;
-        return true;
-    }
+    public HotkeyApplyResult TryApply(AppSettings settings, Action persist) =>
+        _registrations.TryApply(HotkeyBindings.FromSettings(settings), persist);
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
         if (msg == NativeMethods.WM_HOTKEY &&
-            _registeredHotkeys.TryGetValue(wParam.ToInt32(), out var action))
+            _registrations.FindBinding(wParam.ToInt32()) is { } binding)
         {
-            HotkeyPressed?.Invoke(this, new HotkeyActionEventArgs(action));
+            var args = new HotkeyActionEventArgs(binding.Action, binding.Hotkey.Clone());
+            PreviewHotkeyPressed?.Invoke(this, args);
+            if (!args.Handled)
+            {
+                HotkeyPressed?.Invoke(this, args);
+            }
             handled = true;
         }
 
@@ -150,7 +68,10 @@ public sealed class HotkeyManager : IDisposable
 
     public void Dispose()
     {
-        Unregister();
+        foreach (var error in _registrations.UnregisterAll())
+        {
+            System.Diagnostics.Trace.TraceError(error);
+        }
         _hwndSource.RemoveHook(WndProc);
         _hwndSource.Dispose();
         _messageWindow.Close();
@@ -167,18 +88,21 @@ public enum HotkeyAction
     Region
 }
 
-public sealed class HotkeyActionEventArgs(HotkeyAction action) : EventArgs
+public sealed class HotkeyActionEventArgs(HotkeyAction action, HotkeyDefinition hotkey) : EventArgs
 {
     public HotkeyAction Action { get; } = action;
+    public HotkeyDefinition Hotkey { get; } = hotkey;
+    public bool Handled { get; set; }
 }
 
 public static class HotkeyActionRouting
 {
-    public static AiCaptureMode? GetRegionAiModeOverride(HotkeyAction action) =>
+    public static AiCaptureMode? GetAiModeOverride(HotkeyAction action) =>
         action switch
         {
             HotkeyAction.RegionAiSkills => AiCaptureMode.Answer,
             HotkeyAction.RegionLlm => AiCaptureMode.Capture,
+            HotkeyAction.FullScreen => AiCaptureMode.None,
             HotkeyAction.Region => AiCaptureMode.None,
             _ => null
         };

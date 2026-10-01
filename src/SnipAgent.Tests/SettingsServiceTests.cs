@@ -38,6 +38,74 @@ public class SettingsServiceTests : IDisposable
         return service;
     }
 
+    [Theory]
+    [InlineData("{}")]
+    [InlineData("{\"DedicatedHotkeys\":null}")]
+    [InlineData("{\"DedicatedHotkeys\":{\"AiSkills\":null,\"Region\":null}}")]
+    public void Load_OldOrNullDedicatedAssignments_RetainsLegacyDefaults(string json)
+    {
+        var settings = CreateServiceWithFile(json).Load();
+
+        Assert.Equal(0x41, settings.DedicatedHotkeys.AiSkills.VirtualKey);
+        Assert.Equal(0x43, settings.DedicatedHotkeys.ExtractText.VirtualKey);
+        Assert.Equal(0x46, settings.DedicatedHotkeys.FullScreen.VirtualKey);
+        Assert.Equal(0x44, settings.DedicatedHotkeys.Region.VirtualKey);
+    }
+
+    [Fact]
+    public void Load_OldSettings_PreservesMainHotkeyAndUnrelatedValues()
+    {
+        var json = JsonSerializer.Serialize(new
+        {
+            Hotkey = new { Modifiers = 6, VirtualKey = 0x42 },
+            FilenamePattern = "Old_{date}",
+            CaptureDelaySeconds = 5
+        });
+
+        var settings = CreateServiceWithFile(json).Load();
+
+        Assert.Equal(6, settings.Hotkey.Modifiers);
+        Assert.Equal(0x42, settings.Hotkey.VirtualKey);
+        Assert.Equal("Old_{date}", settings.FilenamePattern);
+        Assert.Equal(5, settings.CaptureDelaySeconds);
+        Assert.Equal(0x41, settings.DedicatedHotkeys.AiSkills.VirtualKey);
+    }
+
+    [Fact]
+    public void SaveThenLoad_RoundTripsAllFiveCustomAssignments()
+    {
+        var service = CreateServiceWithFile();
+        var settings = service.Load();
+        settings.Hotkey = HotkeyDefinition.CtrlAlt(0x51);
+        settings.DedicatedHotkeys = new DedicatedHotkeySettings
+        {
+            AiSkills = new() { Modifiers = 6, VirtualKey = 0x42 },
+            ExtractText = new() { Modifiers = 5, VirtualKey = 0x45 },
+            FullScreen = new() { Modifiers = 8, VirtualKey = 0x47 },
+            Region = new() { Modifiers = 2, VirtualKey = 0x48 }
+        };
+
+        service.Save(settings);
+        var reloaded = service.Load();
+
+        Assert.True(settings.Hotkey.HasSameCombination(reloaded.Hotkey));
+        Assert.True(settings.DedicatedHotkeys.AiSkills.HasSameCombination(reloaded.DedicatedHotkeys.AiSkills));
+        Assert.True(settings.DedicatedHotkeys.ExtractText.HasSameCombination(reloaded.DedicatedHotkeys.ExtractText));
+        Assert.True(settings.DedicatedHotkeys.FullScreen.HasSameCombination(reloaded.DedicatedHotkeys.FullScreen));
+        Assert.True(settings.DedicatedHotkeys.Region.HasSameCombination(reloaded.DedicatedHotkeys.Region));
+    }
+
+    [Fact]
+    public void Load_InvalidDedicatedAssignment_IsNotSilentlyRewritten()
+    {
+        var service = CreateServiceWithFile("{\"DedicatedHotkeys\":{\"AiSkills\":{\"Modifiers\":0,\"VirtualKey\":0}}}");
+
+        var settings = service.Load();
+
+        Assert.Equal(0, settings.DedicatedHotkeys.AiSkills.Modifiers);
+        Assert.Equal(0, settings.DedicatedHotkeys.AiSkills.VirtualKey);
+    }
+
     [Fact]
     public void Load_WhenFileMissing_CreatesDefaultsAndPersistsThem()
     {

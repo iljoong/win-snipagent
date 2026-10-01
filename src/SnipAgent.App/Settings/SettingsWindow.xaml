@@ -6,9 +6,13 @@
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResize">
     <DockPanel Margin="16">
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-            <Button Content="Cancel" Width="90" Margin="0,0,8,0" Click="OnCancelClick" />
-            <Button Content="Save" Width="90" Click="OnSaveClick" IsDefault="True" />
+        <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+            <TextBlock x:Name="HotkeySaveErrorText" Foreground="Red" TextWrapping="Wrap"
+                       Margin="0,0,0,8" AutomationProperties.LiveSetting="Assertive" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Cancel" Width="90" Margin="0,0,8,0" Click="OnCancelClick" />
+                <Button Content="Save" Width="90" Click="OnSaveClick" IsDefault="True" />
+            </StackPanel>
         </StackPanel>
 
         <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -32,11 +36,13 @@
                 <!-- Capture Options -->
                 <GroupBox Header="Capture Options" Margin="0,0,0,12">
                     <StackPanel Margin="8">
-                        <TextBlock Text="Global hotkey (repeats last-used capture mode):" Margin="0,0,0,2" />
+                        <Label Content="Global hotkey (repeats last-used capture mode):" Margin="0,0,0,2"
+                               Target="{Binding ElementName=HotkeyTextBox}" Padding="0" />
                         <TextBox x:Name="HotkeyTextBox" IsReadOnly="True"
                                  PreviewKeyDown="OnHotkeyPreviewKeyDown"
+                                 AutomationProperties.Name="Global hotkey"
                                  Text="Click here and press a new key combination" />
-                        <TextBlock x:Name="HotkeyValidationText" Margin="0,6,0,0" Foreground="Red" />
+                        <TextBlock x:Name="HotkeyValidationText" Margin="0,6,0,0" Foreground="Red" TextWrapping="Wrap" />
 
                         <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                             <TextBlock Text="Capture delay:" VerticalAlignment="Center" Margin="0,0,8,0" />
@@ -99,6 +105,66 @@
                                 <TextBlock Text="API Key:" Margin="0,10,0,2" />
                                 <PasswordBox x:Name="AiApiKeyBox" />
                                 <TextBlock x:Name="AiApiKeyHintText" Margin="0,2,0,0" FontSize="11" Foreground="Gray" />
+                            </StackPanel>
+                        </TabItem>
+                        <TabItem Header="Custom Hotkey">
+                            <StackPanel Margin="8">
+                                <TextBlock Text="Click a field and press a key combination. Availability is checked on Save."
+                                           TextWrapping="Wrap" Foreground="Gray" Margin="0,0,0,10" />
+                                <Label Target="{Binding ElementName=AiSkillsHotkeyTextBox}" Padding="0" Margin="0,0,0,2">
+                                    <TextBlock TextWrapping="Wrap">
+                                        <Run Text="AI Skills" FontWeight="SemiBold" />
+                                        <Run Text=" &#x2014; Region capture" Foreground="#595959" />
+                                    </TextBlock>
+                                </Label>
+                                <TextBox x:Name="AiSkillsHotkeyTextBox" IsReadOnly="True"
+                                         AutomationProperties.Name="AI Skills hotkey"
+                                         AutomationProperties.HelpText="Region capture using AI Skills."
+                                         PreviewKeyDown="OnHotkeyPreviewKeyDown" />
+                                <TextBlock x:Name="AiSkillsHotkeyValidationText" Foreground="Red"
+                                           TextWrapping="Wrap" Margin="0,2,0,0" />
+
+                                <Label Target="{Binding ElementName=ExtractTextHotkeyTextBox}"
+                                       Padding="0" Margin="0,10,0,2">
+                                    <TextBlock TextWrapping="Wrap">
+                                        <Run Text="Extract Text" FontWeight="SemiBold" />
+                                        <Run Text=" &#x2014; Region capture using LLM" Foreground="#595959" />
+                                    </TextBlock>
+                                </Label>
+                                <TextBox x:Name="ExtractTextHotkeyTextBox" IsReadOnly="True"
+                                         AutomationProperties.Name="Extract Text hotkey"
+                                         AutomationProperties.HelpText="Region capture with LLM text extraction."
+                                         PreviewKeyDown="OnHotkeyPreviewKeyDown" />
+                                <TextBlock x:Name="ExtractTextHotkeyValidationText" Foreground="Red"
+                                           TextWrapping="Wrap" Margin="0,2,0,0" />
+
+                                <Label Target="{Binding ElementName=FullScreenHotkeyTextBox}"
+                                       Padding="0" Margin="0,10,0,2">
+                                    <TextBlock TextWrapping="Wrap">
+                                        <Run Text="Full Screen" FontWeight="SemiBold" />
+                                        <Run Text=" &#x2014; Image only" Foreground="#595959" />
+                                    </TextBlock>
+                                </Label>
+                                <TextBox x:Name="FullScreenHotkeyTextBox" IsReadOnly="True"
+                                         AutomationProperties.Name="Full Screen hotkey"
+                                         AutomationProperties.HelpText="Monitor capture without text extraction or AI."
+                                         PreviewKeyDown="OnHotkeyPreviewKeyDown" />
+                                <TextBlock x:Name="FullScreenHotkeyValidationText" Foreground="Red"
+                                           TextWrapping="Wrap" Margin="0,2,0,0" />
+
+                                <Label Target="{Binding ElementName=RegionHotkeyTextBox}"
+                                       Padding="0" Margin="0,10,0,2">
+                                    <TextBlock TextWrapping="Wrap">
+                                        <Run Text="Region" FontWeight="SemiBold" />
+                                        <Run Text=" &#x2014; Image only" Foreground="#595959" />
+                                    </TextBlock>
+                                </Label>
+                                <TextBox x:Name="RegionHotkeyTextBox" IsReadOnly="True"
+                                         AutomationProperties.Name="Region hotkey"
+                                         AutomationProperties.HelpText="Region capture without text extraction or AI."
+                                         PreviewKeyDown="OnHotkeyPreviewKeyDown" />
+                                <TextBlock x:Name="RegionHotkeyValidationText" Foreground="Red"
+                                           TextWrapping="Wrap" Margin="0,2,0,0" />
                             </StackPanel>
                         </TabItem>
                     </TabControl>
