@@ -63,6 +63,11 @@ public sealed class SettingsService
                 settings.FilenamePattern = new AppSettings().FilenamePattern;
             }
             settings.Hotkey ??= HotkeyDefinition.Default;
+            settings.DedicatedHotkeys ??= new DedicatedHotkeySettings();
+            settings.DedicatedHotkeys.AiSkills ??= HotkeyDefinition.CtrlAlt(0x41);
+            settings.DedicatedHotkeys.ExtractText ??= HotkeyDefinition.CtrlAlt(0x43);
+            settings.DedicatedHotkeys.FullScreen ??= HotkeyDefinition.CtrlAlt(0x46);
+            settings.DedicatedHotkeys.Region ??= HotkeyDefinition.CtrlAlt(0x44);
             settings.CaptureDelaySeconds = AppSettings.NormalizeCaptureDelay(settings.CaptureDelaySeconds);
             settings.AiAnswerOverlayOpacity = AppSettings.NormalizeAiAnswerOverlayOpacity(settings.AiAnswerOverlayOpacity);
             settings.AiAnswerOverlayWidth = AppSettings.NormalizeAiAnswerOverlayWidth(settings.AiAnswerOverlayWidth);

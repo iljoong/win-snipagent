@@ -8,11 +8,6 @@ namespace SnipAgent.App.Models;
 /// </summary>
 public sealed class HotkeyDefinition
 {
-    public const int CtrlAltA = 0x41;
-    public const int CtrlAltC = 0x43;
-    public const int CtrlAltF = 0x46;
-    public const int CtrlAltD = 0x44;
-
     /// <summary>Bitwise combination of MOD_ALT (1), MOD_CONTROL (2), MOD_SHIFT (4), MOD_WIN (8).</summary>
     public int Modifiers { get; set; }
 
@@ -28,18 +23,24 @@ public sealed class HotkeyDefinition
         VirtualKey = 0x53 // 'S'
     };
 
-    public static IReadOnlyList<HotkeyDefinition> ReservedDedicatedHotkeys =>
-        new[]
-        {
-            new HotkeyDefinition { Modifiers = ModifierFlags.Control | ModifierFlags.Alt, VirtualKey = CtrlAltA },
-            new HotkeyDefinition { Modifiers = ModifierFlags.Control | ModifierFlags.Alt, VirtualKey = CtrlAltC },
-            new HotkeyDefinition { Modifiers = ModifierFlags.Control | ModifierFlags.Alt, VirtualKey = CtrlAltF },
-            new HotkeyDefinition { Modifiers = ModifierFlags.Control | ModifierFlags.Alt, VirtualKey = CtrlAltD },
-        };
+    public static HotkeyDefinition CtrlAlt(int virtualKey) => new()
+    {
+        Modifiers = ModifierFlags.Control | ModifierFlags.Alt,
+        VirtualKey = virtualKey
+    };
 
-    public bool IsReservedDedicatedHotkey() =>
-        ReservedDedicatedHotkeys.Any(hotkey =>
-            hotkey.Modifiers == Modifiers && hotkey.VirtualKey == VirtualKey);
+    public HotkeyDefinition Clone() => new() { Modifiers = Modifiers, VirtualKey = VirtualKey };
+
+    public bool HasSameCombination(HotkeyDefinition other) =>
+        Modifiers == other.Modifiers && VirtualKey == other.VirtualKey;
+
+    public bool IsValid() =>
+        Modifiers != 0 &&
+        (Modifiers & ~(ModifierFlags.Control | ModifierFlags.Alt | ModifierFlags.Shift | ModifierFlags.Win)) == 0 &&
+        VirtualKey is > 0 and < 0xFF &&
+        VirtualKey is not (0x10 or 0x11 or 0x12 or 0x5B or 0x5C or
+            0xA0 or 0xA1 or 0xA2 or 0xA3 or 0xA4 or 0xA5) &&
+        System.Windows.Input.KeyInterop.KeyFromVirtualKey(VirtualKey) != System.Windows.Input.Key.None;
 
     public override string ToString()
     {

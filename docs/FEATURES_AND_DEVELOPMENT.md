@@ -14,13 +14,27 @@ WPF. It runs in the system tray without a main window.
 - A global hotkey (default **Ctrl+Alt+S**, configurable in Settings) repeats the
   last region or full-screen capture mode. The previous region or monitor is
   shown so pressing **Enter** can recapture the same selection.
-- Dedicated global shortcuts are always available when not claimed by another
-  application: **Ctrl+Alt+A** starts region capture with Use AI Skills,
-  **Ctrl+Alt+C** starts region capture with LLM text extraction, **Ctrl+Alt+F**
-  starts full-screen capture, and **Ctrl+Alt+D** starts a plain region capture
-  without OCR or AI extraction. The A, C, and D selections apply only to that
-  capture and do not change settings. These four combinations are reserved from
-  the configurable hotkey.
+- Dedicated global shortcuts are configurable under **Advanced Options >
+  Custom Hotkey**: **AI Skills** (default **Ctrl+Alt+A**) starts region capture
+  with AI Skills, **Extract Text** (**Ctrl+Alt+C**) starts region capture with
+  LLM extraction, **Full Screen** (**Ctrl+Alt+F**) starts monitor capture, and
+  **Region** (**Ctrl+Alt+D**) starts region capture. Full Screen and Region
+  always produce images without OCR or AI extraction. Each dedicated action
+  overrides the AI mode for that capture only; the main shortcut and tray
+  commands still use the configured mode.
+  Each field shows a bold option name with a short inline description above its
+  input, including **Image only** for capture-only actions. Description text uses
+  darker gray at the normal text size and wraps when needed; validation errors
+  remain below the input. Screen readers receive full action help text.
+- All five hotkeys require modifier+key combinations and distinct assignments.
+  Their defaults are not permanently reserved: unchanged combinations, swaps,
+  and reuse of freed defaults are supported. Editing leaves live registrations
+  intact, and focused hotkey fields record SnipAgent's own shortcuts without
+  triggering captures. Save validates and registers the complete set before
+  persisting; registration or write failures retain settings and restore prior
+  registrations, reporting any rollback failures explicitly. Cancel discards
+  edits. Startup registers available assignments independently and reports each
+  invalid, duplicate, or unavailable action and combination.
 - An optional capture delay of 3, 5, or 10 seconds provides time to open a menu
   or display a tooltip before the desktop is frozen. It works with both capture
   modes and does not block the tray application.

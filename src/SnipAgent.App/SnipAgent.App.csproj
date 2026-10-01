@@ -12,7 +12,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>SnipAgent</AssemblyName>
     <RootNamespace>SnipAgent.App</RootNamespace>
-    <Version>0.1.2</Version>
+    <Version>0.1.4</Version>
     <ApplicationIcon>Assets\capture.ico</ApplicationIcon>
     <!-- Allows restoring/building this Windows-targeted project on non-Windows dev/CI machines. -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
