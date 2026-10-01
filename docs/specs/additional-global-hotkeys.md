@@ -320,8 +320,13 @@ configuration was separately exercised:
 Requested on 2026-10-01 after reviewing the supplied Settings screenshot.
 Moved action descriptions beside the option titles, added a matching description
 for AI Skills, improved text contrast and sizing, and provided full automation
-help text. Input behavior and hotkey assignments are unchanged. Patch version:
-0.1.3 to 0.1.4.
+help text. Input behavior and hotkey assignments are unchanged. The local UI
+iteration initially incremented 0.1.3 to 0.1.4; at the repository owner's
+explicit request on 2026-10-01, the complete feature and UI refinement use
+release version 0.1.3.
+
+Release-version verification on 2026-10-01: `.\scripts\verify.ps1` passed
+with version 0.1.3, 0 build warnings, 0 errors, and all 116 tests passing.
 
 Automated verification: `.\scripts\verify.ps1` passed on 2026-10-01:
 0 build warnings, 0 errors; 116 tests passed, 0 failed, 0 skipped.
