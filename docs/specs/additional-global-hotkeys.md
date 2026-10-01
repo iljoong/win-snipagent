@@ -271,6 +271,19 @@ Command: `.\scripts\verify.ps1`
 Result: Passed. Build: 0 warnings, 0 errors. Tests: 116 passed, 0 failed,
 0 skipped.
 
+PR handoff verification on 2026-10-01: a fresh `.\scripts\verify.ps1` attempt
+was blocked by the running SnipAgent instance locking the Debug executable
+(MSB3027/MSB3021). The instance was left running. Verification using separate
+Release outputs passed:
+
+```powershell
+dotnet build .\SnipAgent.slnx -c Release
+dotnet test .\SnipAgent.slnx -c Release --no-build
+```
+
+Results: build passed with 0 warnings and 0 errors; 116 tests passed, 0 failed,
+0 skipped. No production code changed after the earlier successful Debug check.
+
 The editor test tool did not discover the xUnit files; the explicit .NET command
 above was used instead. Editor diagnostics reported no errors in the application
 or tests.
